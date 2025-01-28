@@ -1,21 +1,12 @@
 import * as React from "react"
 const Arrow = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    stroke="#000"
-    strokeWidth={0}
-    viewBox="0 0 24 24"
-    width={30}
-    height={30}
-  >
-    <rect width={12} height={13} x={6} y={3} fill="#fff" rx={3} />
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width={30} height={30}>
+    <circle cx={256} cy={256} r={232.99} />
     <path
-      fill="#000"
-      fillRule="evenodd"
-      stroke="none"
-      d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Zm3.182-13.146h-8v8h2v-4.586l6.243 6.242 1.414-1.414-6.243-6.242h4.586v-2Z"
-      clipRule="evenodd"
+      d="m372.93 323.92-49.01 49.01-120.01-120v97.29h-50.06V153.95h196.4v50.06h-97.22l119.9 119.91z"
+      style={{
+        fill: "#eaeaea",
+      }}
     />
   </svg>
 )

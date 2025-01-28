@@ -100,7 +100,7 @@ const VideoToIframe = () => {
             }`}
             onClick={handleStartExperience}
           >
-            <p className="text-xl uppercase tracking-wide translate-y-0 translate-x-4 font-medium">Comenzar</p>
+            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">Comenzar</p>
             <div className="translate-y-4 translate-x-4">
               <Arrow/>
             </div>
