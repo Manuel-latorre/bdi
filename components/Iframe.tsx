@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import PlayIcon from "./PlayIcon";
+import Arrow from "./Arrow";
 
 const VideoToIframe = () => {
   const [showVideo, setShowVideo] = useState(true);
@@ -92,12 +93,15 @@ const VideoToIframe = () => {
             }`} 
           />
           <button
-            className={`p-2 rounded-full border border-white flex items-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
+            className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
               showOverlay ? 'opacity-100' : 'opacity-0'
             }`}
             onClick={handleStartExperience}
           >
-            <PlayIcon/> Start Experience
+            <p className="text-xl uppercase tracking-wide translate-y-0 translate-x-4">Comenzar</p>
+            <div className="translate-y-4 translate-x-4">
+              <Arrow/>
+            </div>
           </button>
         </div>
       ) : (
