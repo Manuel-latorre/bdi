@@ -48,7 +48,7 @@ const VideoToIframe = () => {
         if (!hasInteracted) {
           setShowVideo(true);
         }
-      }, 10000);
+      }, 30000);
 
       const iframe = iframeRef.current;
       const handleIframeInteractionWrapper = () => handleIframeInteraction();
