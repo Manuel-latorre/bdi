@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
 
@@ -28,10 +27,7 @@ const VideoToIframe = () => {
       {showVideo ? (
         <div
           className="relative w-full h-full"
-          onMouseEnter={handleShowOverlay} // Hover en desktop
-          onMouseLeave={() => isDesktop && setShowOverlay(false)} // Solo en desktop
-          onClick={handleShowOverlay} // Click en cualquier dispositivo
-          onTouchStart={handleShowOverlay} // Touch en móviles y Smart TVs
+          onClick={() => setShowOverlay(true)} // Click general
         >
           <video
             ref={videoRef}
@@ -54,17 +50,13 @@ const VideoToIframe = () => {
           />
           <button
             className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-              showOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
+              showOverlay ? "opacity-100" : "opacity-0"
             }`}
             onClick={handleStartExperience}
-            onTouchStart={handleStartExperience} // Soporte táctil para Smart TVs y móviles
           >
-            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
+            <p className="text-xl uppercase tracking-wide font-medium">
               Comenzar
             </p>
-            <div className="translate-y-4 translate-x-4">
-              <Arrow />
-            </div>
           </button>
         </div>
       ) : (
@@ -84,7 +76,6 @@ const VideoToIframe = () => {
 };
 
 export default VideoToIframe;
-
 
 /* 
 
