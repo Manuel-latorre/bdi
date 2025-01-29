@@ -1,153 +1,77 @@
 "use client";
 
-
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
 
-type PlayerEventMap = {
-  ready: void;
-  loading: void;
-  afkWarning: void;
-  afkWarningDeactivate: void;
-  afkTimedOut: void;
-  fileProgress: number;
-  fileReceived: {
-    file: Blob;
-    extension: string;
-  };
-};
-
-interface ArcanePlayer {
-  play: () => void;
-  emitUIEvent: (descriptor: string | object) => boolean;
-  onReceiveEvent: (name: string, listener: (response: string) => void) => void;
-  onPlayerEvent: <T extends keyof PlayerEventMap>(
-    name: T,
-    listener: (data: PlayerEventMap[T]) => void
-  ) => void;
-  toggleFullscreen: () => boolean;
-}
-
-declare global {
-  interface Window {
-    ArcanePlayer: ArcanePlayer;
-    initArcanePlayer: () => void;
-  }
-}
-
 const VideoToIframe = () => {
-    const [showVideo, setShowVideo] = useState(true);
-    const [showOverlay, setShowOverlay] = useState(false);
-    const [isDesktop, setIsDesktop] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const arcaneInitialized = useRef(false);
+  const [showVideo, setShowVideo] = useState(true);
+  const [showOverlay, setShowOverlay] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
-    useEffect(() => {
-        setIsDesktop(window.matchMedia("(hover: hover)").matches);
-    }, []);
+  useEffect(() => {
+    setIsDesktop(window.matchMedia("(hover: hover)").matches);
+  }, []);
 
-    const handleStartExperience = () => {
-        setShowVideo(false);
-    };
+  const handleStartExperience = () => {
+    setShowVideo(false);
+  };
 
-    useEffect(() => {
-        if (!showVideo && !arcaneInitialized.current) {
-            const iframeContainer = document.getElementById('arcane-player');
-            if (!iframeContainer) return;
-
-            // Limpiar contenido previo
-            iframeContainer.innerHTML = '';
-
-            // Crear iframe directamente con la URL completa
-            const iframe = document.createElement('iframe');
-            iframe.src = "https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==";
-            iframe.id = 'arcane-player-frame';
-            iframe.setAttribute('frameBorder', '0');
-            iframe.setAttribute('allow', 'fullscreen; microphone');
-            iframe.setAttribute('allowFullscreen', 'true');
-            iframe.className = 'w-full h-full';
-            
-            // Configurar atributos data directamente en el iframe
-            iframe.dataset.projectId = '5067';
-            iframe.dataset.projectKey = 'e782cf6b-32a3-4b2b-a2be-468ec62e4c34';
-            iframe.dataset.idleTimeout = '50';
-            iframe.dataset.captureMouse = 'true';
-            iframe.dataset.enableEventsPassthrough = 'true';
-            iframe.dataset.hideUiControls = 'false';
-            iframe.dataset.autoplay = 'true';
-
-            iframeContainer.appendChild(iframe);
-            arcaneInitialized.current = true;
-
-            // Escuchar el evento de carga del iframe
-            iframe.onload = () => {
-                if (iframe.contentWindow) {
-                    // Configurar mensaje para escuchar eventos de timeout
-                    window.addEventListener('message', (event) => {
-                        if (event.data === 'arcane-timeout') {
-                            console.log('Timeout detected');
-                            setShowVideo(true);
-                        }
-                    });
-                }
-            };
-
-            return () => {
-                arcaneInitialized.current = false;
-                if (iframeContainer) {
-                    iframeContainer.innerHTML = '';
-                }
-            };
-        }
-    }, [showVideo]);
-
-    return (
-        <div className="relative w-full h-screen">
-            {showVideo ? (
-                <div
-                    className="relative w-full h-full"
-                    onMouseEnter={() => setShowOverlay(true)}
-                    onMouseLeave={() => isDesktop && setShowOverlay(false)}
-                    onTouchStart={() => setShowOverlay(true)}
-                >
-                    <video
-                        ref={videoRef}
-                        className="w-full h-full object-cover"
-                        loop
-                        muted
-                        playsInline
-                        autoPlay
-                    >
-                        <source src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4" type="video/mp4" />
-                        Tu navegador no soporta el video.
-                    </video>
-                    <div
-                        className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-                            showOverlay ? "opacity-50" : "opacity-0"
-                        }`}
-                    />
-                    <button
-                        className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-                            showOverlay ? "opacity-100" : "opacity-0"
-                        }`}
-                        onClick={handleStartExperience}
-                    >
-                        <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
-                            Comenzar
-                        </p>
-                        <div className="translate-y-4 translate-x-4">
-                            <Arrow />
-                        </div>
-                    </button>
-                </div>
-            ) : (
-                <div id="arcane-player" className="w-full h-full"></div>
-            )}
+  return (
+    <div className="relative w-full h-screen">
+      {showVideo ? (
+        <div
+          className="relative w-full h-full"
+          onMouseEnter={() => setShowOverlay(true)}
+          onMouseLeave={() => isDesktop && setShowOverlay(false)}
+          onTouchStart={() => setShowOverlay(true)}
+        >
+          <video
+            ref={videoRef}
+            className="w-full h-full object-cover"
+            loop
+            muted
+            playsInline
+            autoPlay
+          >
+            <source src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4" type="video/mp4" />
+            Tu navegador no soporta el video.
+          </video>
+          <div
+            className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+              showOverlay ? "opacity-50" : "opacity-0"
+            }`}
+          />
+          <button
+            className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
+              showOverlay ? "opacity-100" : "opacity-0"
+            }`}
+            onClick={handleStartExperience}
+          >
+            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">Comenzar</p>
+            <div className="translate-y-4 translate-x-4">
+              <Arrow />
+            </div>
+          </button>
         </div>
-    );
+      ) : (
+        <iframe
+          id="arcane-player-frame"
+          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
+          frameBorder="0"
+          width="100%"
+          height="100%"
+          className="w-full h-full"
+          allow="fullscreen; microphone"
+          allowFullScreen
+        />
+      )}
+    </div>
+  );
 };
 
 export default VideoToIframe;
+
 
 /* 
 
