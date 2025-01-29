@@ -1,4 +1,5 @@
 "use client";
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
@@ -34,20 +35,15 @@ declare global {
   }
 }
 
-export type { ArcanePlayer, PlayerEventMap };
-
-declare global {
-    interface Window {
-        ArcanePlayer: ArcanePlayer;
-        initArcanePlayer: () => void;
-    }
-}
+const PROJECT_KEY = "e782cf6b-32a3-4b2b-a2be-468ec62e4c34";
+const AUTH_KEY = "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==";
 
 const VideoToIframe = () => {
     const [showVideo, setShowVideo] = useState(true);
     const [showOverlay, setShowOverlay] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
     const videoRef = useRef<HTMLVideoElement>(null);
+    const arcaneInitialized = useRef(false);
 
     useEffect(() => {
         setIsDesktop(window.matchMedia("(hover: hover)").matches);
@@ -55,48 +51,45 @@ const VideoToIframe = () => {
 
     const handleStartExperience = () => {
         setShowVideo(false);
-        initializeArcane();
     };
 
-    const initializeArcane = () => {
-        const script = document.createElement('script');
-        script.src = 'https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e';
-        script.async = true;
-        
-        script.onload = () => {
-            window.initArcanePlayer();
-        };
+    useEffect(() => {
+        if (!showVideo && !arcaneInitialized.current) {
+            const iframeContainer = document.getElementById('arcane-player');
+            if (!iframeContainer) return;
 
-        window.addEventListener('ArcanePlayerLoaded', () => {
-            const player = window.ArcanePlayer;
+            // Limpiar cualquier contenido previo
+            iframeContainer.innerHTML = '';
 
-            // Configurar eventos de Arcane
-            player.onPlayerEvent('ready', () => {
-                console.log('Arcane Player Ready');
-                player.play();
-            });
+            // Crear el iframe directamente
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://embed.arcanemirage.com/${PROJECT_KEY}?key=${AUTH_KEY}`;
+            iframe.className = 'w-full h-full';
+            iframe.allow = 'fullscreen; microphone';
+            iframe.allowFullscreen = true;
+            iframe.frameBorder = '0';
 
-            player.onPlayerEvent('afkWarning', () => {
-                console.log('AFK Warning received');
-            });
+            iframeContainer.appendChild(iframe);
 
-            player.onPlayerEvent('afkTimedOut', () => {
-                console.log('AFK Timeout - returning to video');
-                setShowVideo(true);
-            });
+            // Marcar como inicializado
+            arcaneInitialized.current = true;
 
-            // Eventos adicionales para debug
-            player.onPlayerEvent('loading', () => {
-                console.log('Loading Arcane Player');
-            });
+            // Escuchar eventos dentro del iframe
+            iframe.onload = () => {
+                if (iframe.contentWindow) {
+                    // Aquí podrías agregar listeners específicos si los necesitas
+                    console.log('Iframe loaded successfully');
+                }
+            };
 
-            player.onReceiveEvent('CustomUIEventResponse', (response) => {
-                console.log('Custom UI Event:', response);
-            });
-        });
-
-        document.body.appendChild(script);
-    };
+            return () => {
+                arcaneInitialized.current = false;
+                if (iframeContainer) {
+                    iframeContainer.innerHTML = '';
+                }
+            };
+        }
+    }, [showVideo]);
 
     return (
         <div className="relative w-full h-screen">
@@ -138,26 +131,13 @@ const VideoToIframe = () => {
                     </button>
                 </div>
             ) : (
-                <div className="w-full h-full">
-                    <div
-                        id="arcane-player"
-                        data-project-id="5067"
-                        data-project-key="e782cf6b-32a3-4b2b-a2be-468ec62e4c34"
-                        data-idle-timeout="30"
-                        data-capture-mouse="true"
-                        data-enable-events-passthrough="true"
-                        data-hide-ui-controls="false"
-                        data-autoplay="true"
-                        className="w-full h-full"
-                    ></div>
-                </div>
+                <div id="arcane-player" className="w-full h-full"></div>
             )}
         </div>
     );
 };
 
 export default VideoToIframe;
-
 
 
 /* 
