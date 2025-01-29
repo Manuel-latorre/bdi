@@ -1,5 +1,5 @@
 "use client";
-"use client";
+
 
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
@@ -58,35 +58,75 @@ const VideoToIframe = () => {
             const iframeContainer = document.getElementById('arcane-player');
             if (!iframeContainer) return;
 
-            // Limpiar cualquier contenido previo
+            // Limpiar contenido previo
             iframeContainer.innerHTML = '';
 
-            // Crear el iframe directamente
-            const iframe = document.createElement('iframe');
-            iframe.src = `https://embed.arcanemirage.com/${PROJECT_KEY}?key=${AUTH_KEY}`;
-            iframe.className = 'w-full h-full';
-            iframe.allow = 'fullscreen; microphone';
-            iframe.allowFullscreen = true;
-            iframe.frameBorder = '0';
-
-            iframeContainer.appendChild(iframe);
-
-            // Marcar como inicializado
-            arcaneInitialized.current = true;
-
-            // Escuchar eventos dentro del iframe
-            iframe.onload = () => {
-                if (iframe.contentWindow) {
-                    // Aquí podrías agregar listeners específicos si los necesitas
-                    console.log('Iframe loaded successfully');
+            // Crear e insertar el script de Arcane
+            const script = document.createElement('script');
+            script.src = `https://embed.arcanemirage.com/${PROJECT_KEY}/e`;
+            script.async = true;
+            
+            script.onload = () => {
+                if (window.initArcanePlayer) {
+                    window.initArcanePlayer();
                 }
             };
+
+            // Escuchar eventos de Arcane
+            window.addEventListener('ArcanePlayerLoaded', () => {
+                if (window.ArcanePlayer) {
+                    const player = window.ArcanePlayer;
+
+                    // Configurar eventos de Arcane
+                    player.onPlayerEvent('ready', () => {
+                        console.log('Arcane Player Ready');
+                        player.play();
+                    });
+
+                    player.onPlayerEvent('afkWarning', () => {
+                        console.log('AFK Warning received');
+                    });
+
+                    player.onPlayerEvent('afkTimedOut', () => {
+                        console.log('AFK Timeout - returning to video');
+                        setShowVideo(true);
+                    });
+
+                    player.onPlayerEvent('loading', () => {
+                        console.log('Loading Arcane Player');
+                    });
+
+                    player.onReceiveEvent('CustomUIEventResponse', (response) => {
+                        console.log('Custom UI Event:', response);
+                    });
+                }
+            });
+
+            document.body.appendChild(script);
+            arcaneInitialized.current = true;
+
+            // Configurar el div para Arcane
+            const arcaneDiv = document.createElement('div');
+            arcaneDiv.id = 'arcane-player-instance';
+            arcaneDiv.setAttribute('data-project-id', '5067');
+            arcaneDiv.setAttribute('data-project-key', PROJECT_KEY);
+            arcaneDiv.setAttribute('data-idle-timeout', '50');
+            arcaneDiv.setAttribute('data-capture-mouse', 'true');
+            arcaneDiv.setAttribute('data-enable-events-passthrough', 'true');
+            arcaneDiv.setAttribute('data-hide-ui-controls', 'false');
+            arcaneDiv.setAttribute('data-autoplay', 'true');
+            arcaneDiv.className = 'w-full h-full';
+            
+            iframeContainer.appendChild(arcaneDiv);
 
             return () => {
                 arcaneInitialized.current = false;
                 if (iframeContainer) {
                     iframeContainer.innerHTML = '';
                 }
+                // Limpiar eventos
+                const scripts = document.querySelectorAll('script[src*="arcanemirage"]');
+                scripts.forEach(s => s.remove());
             };
         }
     }, [showVideo]);
@@ -138,7 +178,6 @@ const VideoToIframe = () => {
 };
 
 export default VideoToIframe;
-
 
 /* 
 
