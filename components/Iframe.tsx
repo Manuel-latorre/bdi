@@ -10,7 +10,7 @@ const VideoToIframe = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const INACTIVITY_TIMEOUT = 25000; // 25 segundos
+  const INACTIVITY_TIMEOUT = 59000; // 59 segundos
 
   useEffect(() => {
     setIsDesktop(window.matchMedia("(hover: hover)").matches);
