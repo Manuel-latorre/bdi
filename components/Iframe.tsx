@@ -10,11 +10,17 @@ const VideoToIframe = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    setIsDesktop(window.matchMedia("(hover: hover)").matches);
+    if (typeof window !== "undefined") {
+      setIsDesktop(window.matchMedia("(hover: hover)").matches);
+    }
   }, []);
 
   const handleStartExperience = () => {
     setShowVideo(false);
+  };
+
+  const handleShowOverlay = () => {
+    setShowOverlay(true);
   };
 
   return (
@@ -22,9 +28,10 @@ const VideoToIframe = () => {
       {showVideo ? (
         <div
           className="relative w-full h-full"
-          onMouseEnter={() => setShowOverlay(true)}
-          onMouseLeave={() => isDesktop && setShowOverlay(false)}
-          onTouchStart={() => setShowOverlay(true)}
+          onMouseEnter={handleShowOverlay} // Hover en desktop
+          onMouseLeave={() => isDesktop && setShowOverlay(false)} // Solo en desktop
+          onClick={handleShowOverlay} // Click en cualquier dispositivo
+          onTouchStart={handleShowOverlay} // Touch en móviles y Smart TVs
         >
           <video
             ref={videoRef}
@@ -34,7 +41,10 @@ const VideoToIframe = () => {
             playsInline
             autoPlay
           >
-            <source src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4" type="video/mp4" />
+            <source
+              src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4"
+              type="video/mp4"
+            />
             Tu navegador no soporta el video.
           </video>
           <div
@@ -44,11 +54,14 @@ const VideoToIframe = () => {
           />
           <button
             className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-              showOverlay ? "opacity-100" : "opacity-0"
+              showOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             onClick={handleStartExperience}
+            onTouchStart={handleStartExperience} // Soporte táctil para Smart TVs y móviles
           >
-            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">Comenzar</p>
+            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
+              Comenzar
+            </p>
             <div className="translate-y-4 translate-x-4">
               <Arrow />
             </div>
