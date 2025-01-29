@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
@@ -9,18 +9,17 @@ const VideoToIframe = () => {
   const [isDesktop, setIsDesktop] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const lastInteractionTimeRef = useRef<number>(Date.now());
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const INACTIVITY_TIMEOUT = 25000; // 25 segundos
 
-  // Detectar dispositivo en el lado del cliente
   useEffect(() => {
     setIsDesktop(window.matchMedia("(hover: hover)").matches);
   }, []);
 
   const handleStartExperience = () => {
     setShowVideo(false);
-    updateLastInteractionTime();
+    resetInactivityTimer();
   };
 
   const handleInteraction = () => {
@@ -33,82 +32,49 @@ const VideoToIframe = () => {
     }
   };
 
-  const updateLastInteractionTime = () => {
-    lastInteractionTimeRef.current = Date.now();
-  };
+  const resetInactivityTimer = () => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
 
-  const checkInactivity = () => {
-    const currentTime = Date.now();
-    const timeSinceLastInteraction = currentTime - lastInteractionTimeRef.current;
-
-    if (timeSinceLastInteraction >= INACTIVITY_TIMEOUT) {
+    inactivityTimerRef.current = setTimeout(() => {
       setShowVideo(true);
+    }, INACTIVITY_TIMEOUT);
+  };
+
+  const addEventListeners = () => {
+    const events = ["mousemove", "click", "touchstart", "touchmove", "keydown"];
+    events.forEach(event => document.addEventListener(event, resetInactivityTimer));
+
+    if (iframeRef.current) {
+      events.forEach(event => iframeRef.current?.contentWindow?.document.addEventListener(event, resetInactivityTimer));
     }
   };
 
-  const handleUserInteraction = () => {
-    updateLastInteractionTime();
+  const removeEventListeners = () => {
+    const events = ["mousemove", "click", "touchstart", "touchmove", "keydown"];
+    events.forEach(event => document.removeEventListener(event, resetInactivityTimer));
+
+    if (iframeRef.current) {
+      events.forEach(event => iframeRef.current?.contentWindow?.document.removeEventListener(event, resetInactivityTimer));
+    }
   };
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (video && showVideo) {
-      video.play().catch(error => console.log("Auto-play was prevented:", error));
+    if (showVideo) {
+      videoRef.current?.play().catch(error => console.log("Auto-play was prevented:", error));
+    } else {
+      resetInactivityTimer();
+      addEventListeners();
     }
+
+    return () => {
+      removeEventListeners();
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
   }, [showVideo]);
-
-  useEffect(() => {
-    if (!showVideo) {
-      // Configurar el timer de inactividad
-      const inactivityInterval = setInterval(checkInactivity, 1000);
-
-      // Event listeners para desktop
-      if (isDesktop) {
-        document.addEventListener('mousemove', handleUserInteraction);
-        document.addEventListener('click', handleUserInteraction);
-      }
-
-      // Event listeners para dispositivos táctiles
-      document.addEventListener('touchstart', handleUserInteraction);
-      document.addEventListener('touchmove', handleUserInteraction);
-      document.addEventListener('touchend', handleUserInteraction);
-
-      // Event listeners específicos para el iframe
-      const iframe = iframeRef.current;
-      if (iframe) {
-        if (isDesktop) {
-          iframe.addEventListener('mousemove', handleUserInteraction);
-          iframe.addEventListener('click', handleUserInteraction);
-        }
-        iframe.addEventListener('touchstart', handleUserInteraction);
-        iframe.addEventListener('touchmove', handleUserInteraction);
-        iframe.addEventListener('touchend', handleUserInteraction);
-      }
-
-      return () => {
-        clearInterval(inactivityInterval);
-        
-        if (isDesktop) {
-          document.removeEventListener('mousemove', handleUserInteraction);
-          document.removeEventListener('click', handleUserInteraction);
-        }
-        
-        document.removeEventListener('touchstart', handleUserInteraction);
-        document.removeEventListener('touchmove', handleUserInteraction);
-        document.removeEventListener('touchend', handleUserInteraction);
-
-        if (iframe) {
-          if (isDesktop) {
-            iframe.removeEventListener('mousemove', handleUserInteraction);
-            iframe.removeEventListener('click', handleUserInteraction);
-          }
-          iframe.removeEventListener('touchstart', handleUserInteraction);
-          iframe.removeEventListener('touchmove', handleUserInteraction);
-          iframe.removeEventListener('touchend', handleUserInteraction);
-        }
-      };
-    }
-  }, [showVideo, isDesktop]);
 
   return (
     <div className="relative w-full h-screen">
