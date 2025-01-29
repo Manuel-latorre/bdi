@@ -1,7 +1,4 @@
-"use client";
-
-
-
+"use client"
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
 
@@ -10,12 +7,13 @@ const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const interactionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const [hasInteracted, setHasInteracted] = useState(false);
+  const inactivityTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastTouchTimeRef = useRef<number>(Date.now());
 
   const handleStartExperience = () => {
     setShowVideo(false);
-    setHasInteracted(false);
+    lastTouchTimeRef.current = Date.now();
+    startInactivityTimer();
   };
 
   const handleInteraction = () => {
@@ -28,10 +26,26 @@ const VideoToIframe = () => {
     }
   };
 
-  const handleIframeInteraction = () => {
-    setHasInteracted(true);
-    if (interactionTimeoutRef.current) {
-      clearTimeout(interactionTimeoutRef.current);
+  const startInactivityTimer = () => {
+    if (inactivityTimeoutRef.current) {
+      clearTimeout(inactivityTimeoutRef.current);
+    }
+    
+    inactivityTimeoutRef.current = setTimeout(() => {
+      // Solo verifica inactividad en dispositivos táctiles
+      if (!window.matchMedia("(hover: hover)").matches) {
+        const timeSinceLastTouch = Date.now() - lastTouchTimeRef.current;
+        if (timeSinceLastTouch >= 25000) {
+          setShowVideo(true);
+        }
+      }
+    }, 25000);
+  };
+
+  const handleIframeTouch = () => {
+    if (!window.matchMedia("(hover: hover)").matches) {
+      lastTouchTimeRef.current = Date.now();
+      startInactivityTimer();
     }
   };
 
@@ -44,31 +58,24 @@ const VideoToIframe = () => {
 
   useEffect(() => {
     if (!showVideo) {
-      interactionTimeoutRef.current = setTimeout(() => {
-        if (!hasInteracted) {
-          setShowVideo(true);
-        }
-      }, 30000);
-
       const iframe = iframeRef.current;
-      const handleIframeInteractionWrapper = () => handleIframeInteraction();
-
+      
       if (iframe) {
-        iframe.addEventListener('mousemove', handleIframeInteractionWrapper);
-        iframe.addEventListener('touchstart', handleIframeInteractionWrapper);
+        iframe.addEventListener('touchstart', handleIframeTouch);
       }
 
+      startInactivityTimer();
+
       return () => {
-        if (interactionTimeoutRef.current) {
-          clearTimeout(interactionTimeoutRef.current);
+        if (inactivityTimeoutRef.current) {
+          clearTimeout(inactivityTimeoutRef.current);
         }
         if (iframe) {
-          iframe.removeEventListener('mousemove', handleIframeInteractionWrapper);
-          iframe.removeEventListener('touchstart', handleIframeInteractionWrapper);
+          iframe.removeEventListener('touchstart', handleIframeTouch);
         }
       };
     }
-  }, [showVideo, hasInteracted]);
+  }, [showVideo]);
 
   return (
     <div className="relative w-full h-screen">
