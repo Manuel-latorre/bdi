@@ -35,9 +35,6 @@ declare global {
   }
 }
 
-const PROJECT_KEY = "e782cf6b-32a3-4b2b-a2be-468ec62e4c34";
-/* const AUTH_KEY = "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="; */
-
 const VideoToIframe = () => {
     const [showVideo, setShowVideo] = useState(true);
     const [showOverlay, setShowOverlay] = useState(false);
@@ -61,72 +58,45 @@ const VideoToIframe = () => {
             // Limpiar contenido previo
             iframeContainer.innerHTML = '';
 
-            // Crear e insertar el script de Arcane
-            const script = document.createElement('script');
-            script.src = `https://embed.arcanemirage.com/${PROJECT_KEY}/e`;
-            script.async = true;
+            // Crear iframe directamente con la URL completa
+            const iframe = document.createElement('iframe');
+            iframe.src = "https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==";
+            iframe.id = 'arcane-player-frame';
+            iframe.setAttribute('frameBorder', '0');
+            iframe.setAttribute('allow', 'fullscreen; microphone');
+            iframe.setAttribute('allowFullscreen', 'true');
+            iframe.className = 'w-full h-full';
             
-            script.onload = () => {
-                if (window.initArcanePlayer) {
-                    window.initArcanePlayer();
-                }
-            };
+            // Configurar atributos data directamente en el iframe
+            iframe.dataset.projectId = '5067';
+            iframe.dataset.projectKey = 'e782cf6b-32a3-4b2b-a2be-468ec62e4c34';
+            iframe.dataset.idleTimeout = '50';
+            iframe.dataset.captureMouse = 'true';
+            iframe.dataset.enableEventsPassthrough = 'true';
+            iframe.dataset.hideUiControls = 'false';
+            iframe.dataset.autoplay = 'true';
 
-            // Escuchar eventos de Arcane
-            window.addEventListener('ArcanePlayerLoaded', () => {
-                if (window.ArcanePlayer) {
-                    const player = window.ArcanePlayer;
-
-                    // Configurar eventos de Arcane
-                    player.onPlayerEvent('ready', () => {
-                        console.log('Arcane Player Ready');
-                        player.play();
-                    });
-
-                    player.onPlayerEvent('afkWarning', () => {
-                        console.log('AFK Warning received');
-                    });
-
-                    player.onPlayerEvent('afkTimedOut', () => {
-                        console.log('AFK Timeout - returning to video');
-                        setShowVideo(true);
-                    });
-
-                    player.onPlayerEvent('loading', () => {
-                        console.log('Loading Arcane Player');
-                    });
-
-                    player.onReceiveEvent('CustomUIEventResponse', (response) => {
-                        console.log('Custom UI Event:', response);
-                    });
-                }
-            });
-
-            document.body.appendChild(script);
+            iframeContainer.appendChild(iframe);
             arcaneInitialized.current = true;
 
-            // Configurar el div para Arcane
-            const arcaneDiv = document.createElement('div');
-            arcaneDiv.id = 'arcane-player-instance';
-            arcaneDiv.setAttribute('data-project-id', '5067');
-            arcaneDiv.setAttribute('data-project-key', PROJECT_KEY);
-            arcaneDiv.setAttribute('data-idle-timeout', '50');
-            arcaneDiv.setAttribute('data-capture-mouse', 'true');
-            arcaneDiv.setAttribute('data-enable-events-passthrough', 'true');
-            arcaneDiv.setAttribute('data-hide-ui-controls', 'false');
-            arcaneDiv.setAttribute('data-autoplay', 'true');
-            arcaneDiv.className = 'w-full h-full';
-            
-            iframeContainer.appendChild(arcaneDiv);
+            // Escuchar el evento de carga del iframe
+            iframe.onload = () => {
+                if (iframe.contentWindow) {
+                    // Configurar mensaje para escuchar eventos de timeout
+                    window.addEventListener('message', (event) => {
+                        if (event.data === 'arcane-timeout') {
+                            console.log('Timeout detected');
+                            setShowVideo(true);
+                        }
+                    });
+                }
+            };
 
             return () => {
                 arcaneInitialized.current = false;
                 if (iframeContainer) {
                     iframeContainer.innerHTML = '';
                 }
-                // Limpiar eventos
-                const scripts = document.querySelectorAll('script[src*="arcanemirage"]');
-                scripts.forEach(s => s.remove());
             };
         }
     }, [showVideo]);
