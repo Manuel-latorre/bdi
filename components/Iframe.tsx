@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
 
@@ -14,12 +15,12 @@ const VideoToIframe = () => {
     }
   }, []);
 
-  const handleShowOverlay = () => {
-    setShowOverlay(true);
-  };
-
   const handleStartExperience = () => {
     setShowVideo(false);
+  };
+
+  const handleShowOverlay = () => {
+    setShowOverlay(true);
   };
 
   return (
@@ -27,10 +28,10 @@ const VideoToIframe = () => {
       {showVideo ? (
         <div
           className="relative w-full h-full"
-          onClick={() => setShowOverlay(true)} // General click handler
           onMouseEnter={handleShowOverlay} // Hover en desktop
           onMouseLeave={() => isDesktop && setShowOverlay(false)} // Solo en desktop
-          onTouchStart={handleShowOverlay}
+          onClick={handleShowOverlay} // Click en cualquier dispositivo
+          onTouchStart={handleShowOverlay} // Touch en móviles y Smart TVs
         >
           <video
             ref={videoRef}
@@ -51,15 +52,12 @@ const VideoToIframe = () => {
               showOverlay ? "opacity-50" : "opacity-0"
             }`}
           />
-          {/* Botón Comenzar */}
           <button
-            className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-4 py-2 rounded-full text-xl font-medium uppercase tracking-wide text-black bg-white border transition-all duration-300 ${
-              showOverlay
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none"
-            } hover:bg-black hover:text-white`}
+            className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
+              showOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
             onClick={handleStartExperience}
-            onTouchStart={handleStartExperience}
+            onTouchStart={handleStartExperience} // Soporte táctil para Smart TVs y móviles
           >
             <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
               Comenzar
@@ -86,6 +84,7 @@ const VideoToIframe = () => {
 };
 
 export default VideoToIframe;
+
 
 /* 
 
