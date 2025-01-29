@@ -3,13 +3,38 @@
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
 
+type PlayerEventMap = {
+  ready: void;
+  loading: void;
+  afkWarning: void;
+  afkWarningDeactivate: void;
+  afkTimedOut: void;
+  fileProgress: number;
+  fileReceived: {
+    file: Blob;
+    extension: string;
+  };
+};
+
 interface ArcanePlayer {
-    play: () => void;
-    emitUIEvent: (descriptor: string | object) => boolean;
-    onReceiveEvent: (name: string, listener: (response: string) => void) => void;
-    onPlayerEvent: (name: string, listener: (data?: any) => void) => void;
-    toggleFullscreen: () => boolean;
+  play: () => void;
+  emitUIEvent: (descriptor: string | object) => boolean;
+  onReceiveEvent: (name: string, listener: (response: string) => void) => void;
+  onPlayerEvent: <T extends keyof PlayerEventMap>(
+    name: T,
+    listener: (data: PlayerEventMap[T]) => void
+  ) => void;
+  toggleFullscreen: () => boolean;
 }
+
+declare global {
+  interface Window {
+    ArcanePlayer: ArcanePlayer;
+    initArcanePlayer: () => void;
+  }
+}
+
+export type { ArcanePlayer, PlayerEventMap };
 
 declare global {
     interface Window {
