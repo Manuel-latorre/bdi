@@ -6,12 +6,17 @@ import Arrow from "./Arrow";
 const VideoToIframe = () => {
   const [showVideo, setShowVideo] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const lastInteractionTimeRef = useRef<number>(Date.now());
-  const isDesktop = window.matchMedia("(hover: hover)").matches;
 
   const INACTIVITY_TIMEOUT = 25000; // 25 segundos
+
+  // Detectar dispositivo en el lado del cliente
+  useEffect(() => {
+    setIsDesktop(window.matchMedia("(hover: hover)").matches);
+  }, []);
 
   const handleStartExperience = () => {
     setShowVideo(false);
@@ -103,7 +108,7 @@ const VideoToIframe = () => {
         }
       };
     }
-  }, [showVideo]);
+  }, [showVideo, isDesktop]);
 
   return (
     <div className="relative w-full h-screen">
