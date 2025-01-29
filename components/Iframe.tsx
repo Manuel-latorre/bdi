@@ -14,12 +14,12 @@ const VideoToIframe = () => {
     }
   }, []);
 
-  const handleStartExperience = () => {
-    setShowVideo(false);
-  };
-
   const handleShowOverlay = () => {
     setShowOverlay(true);
+  };
+
+  const handleStartExperience = () => {
+    setShowVideo(false);
   };
 
   return (
@@ -27,7 +27,10 @@ const VideoToIframe = () => {
       {showVideo ? (
         <div
           className="relative w-full h-full"
-          onClick={() => setShowOverlay(true)} // Click general
+          onClick={() => setShowOverlay(true)} // General click handler
+          onMouseEnter={handleShowOverlay} // Hover en desktop
+          onMouseLeave={() => isDesktop && setShowOverlay(false)} // Solo en desktop
+          onTouchStart={handleShowOverlay}
         >
           <video
             ref={videoRef}
@@ -48,15 +51,22 @@ const VideoToIframe = () => {
               showOverlay ? "opacity-50" : "opacity-0"
             }`}
           />
+          {/* Botón Comenzar */}
           <button
-            className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-              showOverlay ? "opacity-100" : "opacity-0"
-            }`}
+            className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 px-4 py-2 rounded-full text-xl font-medium uppercase tracking-wide text-black bg-white border transition-all duration-300 ${
+              showOverlay
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+            } hover:bg-black hover:text-white`}
             onClick={handleStartExperience}
+            onTouchStart={handleStartExperience}
           >
-            <p className="text-xl uppercase tracking-wide font-medium">
+            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
               Comenzar
             </p>
+            <div className="translate-y-4 translate-x-4">
+              <Arrow />
+            </div>
           </button>
         </div>
       ) : (
