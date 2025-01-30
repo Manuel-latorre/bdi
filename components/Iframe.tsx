@@ -6,12 +6,17 @@ import Arrow from "./Arrow";
 const VideoToIframe = () => {
   const [showVideo, setShowVideo] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isSmartTV, setIsSmartTV] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsDesktop(window.matchMedia("(hover: hover)").matches);
+      const userAgent = navigator.userAgent.toLowerCase();
+      setIsSmartTV(
+        /smart-tv|netcast|hbbtv|viera|aquos|googletv|sonytv|appletv|philips|roku|tizen|webos|firetv|android tv|pov_tv/.test(
+          userAgent
+        )
+      );
     }
   }, []);
 
@@ -28,10 +33,9 @@ const VideoToIframe = () => {
       {showVideo ? (
         <div
           className="relative w-full h-full"
-          onMouseEnter={handleShowOverlay} // Hover en desktop
-          onMouseLeave={() => isDesktop && setShowOverlay(false)} // Solo en desktop
           onClick={handleShowOverlay} // Click en cualquier dispositivo
-          onTouchStart={handleShowOverlay} // Touch en móviles y Smart TVs
+          onTouchStart={handleShowOverlay} // Soporte táctil para Smart TVs
+          onKeyDown={(e) => e.key === "Enter" && handleStartExperience()} // Enter en controles remotos
         >
           <video
             ref={videoRef}
@@ -53,11 +57,13 @@ const VideoToIframe = () => {
             }`}
           />
           <button
+            tabIndex={0} // Permite recibir foco en TVs
             className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
               showOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             onClick={handleStartExperience}
-            onTouchStart={handleStartExperience} // Soporte táctil para Smart TVs y móviles
+            onTouchStart={handleStartExperience}
+            onKeyDown={(e) => e.key === "Enter" && handleStartExperience()} // Soporte para teclas
           >
             <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
               Comenzar
@@ -84,6 +90,7 @@ const VideoToIframe = () => {
 };
 
 export default VideoToIframe;
+
 
 
 /* 
