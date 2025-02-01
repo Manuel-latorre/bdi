@@ -9,10 +9,7 @@ const VideoToIframe = () => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [isSmartTV, setIsSmartTV] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
   const playerRef = useRef<any>(null);
-
-  const INACTIVITY_TIMEOUT = 40000; // 40 segundos en milisegundos
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -46,15 +43,6 @@ const VideoToIframe = () => {
     setShowOverlay(true);
   };
 
-  const resetInactivityTimer = () => {
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current);
-    }
-    inactivityTimerRef.current = setTimeout(() => {
-      setShowVideo(true);
-    }, INACTIVITY_TIMEOUT);
-  };
-
   useEffect(() => {
     if (!showVideo) {
       const handleArcanePlayerLoaded = () => {
@@ -63,29 +51,19 @@ const VideoToIframe = () => {
         // Configurar eventos del player
         playerRef.current?.onPlayerEvent('ready', () => {
           console.log('Arcane player ready');
-          resetInactivityTimer();
         });
 
-        // Detectar interacción con el iframe
-        const handleInteraction = () => {
-          resetInactivityTimer();
-        };
+        // Escuchar el evento de inactividad de Arcane
+        playerRef.current?.onPlayerEvent('afkWarning', () => {
+          console.log('Usuario inactivo - cerrando iframe');
+          setShowVideo(true); // Cerrar el iframe antes que Arcane lo haga
+        });
 
-        const iframeElement = document.getElementById('arcane-player-frame');
-        if (iframeElement) {
-          iframeElement.addEventListener('mousedown', handleInteraction);
-          iframeElement.addEventListener('touchstart', handleInteraction);
-        }
-
-        return () => {
-          if (iframeElement) {
-            iframeElement.removeEventListener('mousedown', handleInteraction);
-            iframeElement.removeEventListener('touchstart', handleInteraction);
-          }
-          if (inactivityTimerRef.current) {
-            clearTimeout(inactivityTimerRef.current);
-          }
-        };
+        // Como respaldo, también escuchamos afkTimedOut
+        playerRef.current?.onPlayerEvent('afkTimedOut', () => {
+          console.log('AFK timeout alcanzado');
+          setShowVideo(true);
+        });
       };
 
       window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
