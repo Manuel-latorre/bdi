@@ -45,47 +45,77 @@ const VideoToIframe = () => {
 
   useEffect(() => {
     if (!showVideo) {
+      console.log('Iniciando configuración del iframe...');
+      
       const handleArcanePlayerLoaded = () => {
+        console.log('ArcanePlayer cargado, configurando eventos...');
         playerRef.current = window['ArcanePlayer' as any];
         
         // Configurar eventos del player
         playerRef.current?.onPlayerEvent('ready', () => {
-          console.log('Arcane player ready');
+          console.log('✅ Arcane player listo y funcionando');
         });
 
-        // Cerrar inmediatamente cuando detecte inactividad
+        playerRef.current?.onPlayerEvent('loading', () => {
+          console.log('🔄 Arcane player cargando...');
+        });
+
+        // Eventos de inactividad
         playerRef.current?.onPlayerEvent('afkWarning', () => {
-          console.log('Usuario inactivo - cerrando iframe');
+          console.log('⚠️ ADVERTENCIA: Usuario inactivo - iniciando cierre del iframe');
           
           // Remover el iframe directamente del DOM
           const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
           if (iframe) {
-            iframe.remove();
+            console.log('🎯 Iframe encontrado, procediendo a removerlo');
+            iframe.parentNode?.removeChild(iframe);
+            console.log('✅ Iframe removido exitosamente');
+          } else {
+            console.log('❌ No se encontró el iframe para remover');
           }
           
-          // Actualizar el estado y refrescar
+          console.log('🔄 Actualizando estado y refrescando página...');
           setShowVideo(true);
           window.location.reload();
         });
 
-        // Respaldo adicional
+        playerRef.current?.onPlayerEvent('afkWarningDeactivate', () => {
+          console.log('✅ Advertencia de inactividad desactivada');
+        });
+
+        playerRef.current?.onPlayerEvent('afkTimedOut', () => {
+          console.log('⚠️ Tiempo de inactividad agotado');
+        });
+
+        // Respaldo adicional: verificar si el iframe sigue respondiendo
         const checkInterval = setInterval(() => {
-          const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
-          if (iframe && iframe.contentDocument && iframe.contentDocument.body.innerText.includes('DISCONNECTED')) {
-            iframe.remove();
+          try {
+            const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
+            if (!iframe || !playerRef.current) {
+              console.log('❌ Iframe o player no encontrados en checkInterval');
+              clearInterval(checkInterval);
+              setShowVideo(true);
+              window.location.reload();
+            }
+          } catch (error) {
+            console.log('❌ Error en checkInterval:', error);
+            clearInterval(checkInterval);
             setShowVideo(true);
             window.location.reload();
-            clearInterval(checkInterval);
           }
         }, 1000);
 
         return () => {
+          console.log('🧹 Limpiando eventos y timers...');
           clearInterval(checkInterval);
         };
       };
 
+      console.log('🎭 Agregando listener para ArcanePlayerLoaded...');
       window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
+      
       return () => {
+        console.log('🧹 Removiendo listener de ArcanePlayerLoaded...');
         window.removeEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
       };
     }
