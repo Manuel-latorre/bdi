@@ -9,6 +9,10 @@ const VideoToIframe = () => {
   const [isDesktop, setIsDesktop] = useState(false);
   const [isSmartTV, setIsSmartTV] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const playerRef = useRef<any>(null);
+
+  const INACTIVITY_TIMEOUT = 40000; // 40 segundos en milisegundos
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -41,6 +45,55 @@ const VideoToIframe = () => {
   const handleShowOverlay = () => {
     setShowOverlay(true);
   };
+
+  const resetInactivityTimer = () => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    inactivityTimerRef.current = setTimeout(() => {
+      setShowVideo(true);
+    }, INACTIVITY_TIMEOUT);
+  };
+
+  useEffect(() => {
+    if (!showVideo) {
+      const handleArcanePlayerLoaded = () => {
+        playerRef.current = window['ArcanePlayer' as any];
+        
+        // Configurar eventos del player
+        playerRef.current?.onPlayerEvent('ready', () => {
+          console.log('Arcane player ready');
+          resetInactivityTimer();
+        });
+
+        // Detectar interacción con el iframe
+        const handleInteraction = () => {
+          resetInactivityTimer();
+        };
+
+        const iframeElement = document.getElementById('arcane-player-frame');
+        if (iframeElement) {
+          iframeElement.addEventListener('mousedown', handleInteraction);
+          iframeElement.addEventListener('touchstart', handleInteraction);
+        }
+
+        return () => {
+          if (iframeElement) {
+            iframeElement.removeEventListener('mousedown', handleInteraction);
+            iframeElement.removeEventListener('touchstart', handleInteraction);
+          }
+          if (inactivityTimerRef.current) {
+            clearTimeout(inactivityTimerRef.current);
+          }
+        };
+      };
+
+      window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
+      return () => {
+        window.removeEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
+      };
+    }
+  }, [showVideo]);
 
   return (
     <div className="relative w-full h-screen">
