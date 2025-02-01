@@ -56,9 +56,22 @@ const VideoToIframe = () => {
         // Cerrar inmediatamente cuando detecte inactividad
         playerRef.current?.onPlayerEvent('afkWarning', () => {
           console.log('Usuario inactivo - cerrando iframe');
+          // Primero cambiamos el estado
           setShowVideo(true);
-          // Forzar un refresh de la página para asegurar el cierre completo
-          window.location.reload();
+          // Pequeño delay para asegurar que el estado se actualice
+          setTimeout(() => {
+            // Forzar un refresh de la página para asegurar el cierre completo
+            window.location.reload();
+          }, 100);
+        });
+
+        // Respaldo por si el warning no se procesa a tiempo
+        playerRef.current?.onPlayerEvent('afkWarningDeactivate', () => {
+          console.log('Warning desactivado - cerrando iframe');
+          setShowVideo(true);
+          setTimeout(() => {
+            window.location.reload();
+          }, 100);
         });
       };
 
