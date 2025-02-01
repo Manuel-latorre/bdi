@@ -53,16 +53,12 @@ const VideoToIframe = () => {
           console.log('Arcane player ready');
         });
 
-        // Escuchar el evento de inactividad de Arcane
+        // Cerrar inmediatamente cuando detecte inactividad
         playerRef.current?.onPlayerEvent('afkWarning', () => {
           console.log('Usuario inactivo - cerrando iframe');
-          setShowVideo(true); // Cerrar el iframe antes que Arcane lo haga
-        });
-
-        // Como respaldo, también escuchamos afkTimedOut
-        playerRef.current?.onPlayerEvent('afkTimedOut', () => {
-          console.log('AFK timeout alcanzado');
           setShowVideo(true);
+          // Forzar un refresh de la página para asegurar el cierre completo
+          window.location.reload();
         });
       };
 
