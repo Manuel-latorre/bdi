@@ -56,23 +56,32 @@ const VideoToIframe = () => {
         // Cerrar inmediatamente cuando detecte inactividad
         playerRef.current?.onPlayerEvent('afkWarning', () => {
           console.log('Usuario inactivo - cerrando iframe');
-          // Primero cambiamos el estado
+          
+          // Remover el iframe directamente del DOM
+          const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
+          if (iframe) {
+            iframe.remove();
+          }
+          
+          // Actualizar el estado y refrescar
           setShowVideo(true);
-          // Pequeño delay para asegurar que el estado se actualice
-          setTimeout(() => {
-            // Forzar un refresh de la página para asegurar el cierre completo
-            window.location.reload();
-          }, 100);
+          window.location.reload();
         });
 
-        // Respaldo por si el warning no se procesa a tiempo
-        playerRef.current?.onPlayerEvent('afkWarningDeactivate', () => {
-          console.log('Warning desactivado - cerrando iframe');
-          setShowVideo(true);
-          setTimeout(() => {
+        // Respaldo adicional
+        const checkInterval = setInterval(() => {
+          const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
+          if (iframe && iframe.contentDocument && iframe.contentDocument.body.innerText.includes('DISCONNECTED')) {
+            iframe.remove();
+            setShowVideo(true);
             window.location.reload();
-          }, 100);
-        });
+            clearInterval(checkInterval);
+          }
+        }, 1000);
+
+        return () => {
+          clearInterval(checkInterval);
+        };
       };
 
       window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
