@@ -63,69 +63,42 @@ const VideoToIframe = () => {
 
   useEffect(() => {
     if (!showVideo) {
-      console.log('Iniciando configuración del iframe...');
+      console.log('🚀 Iniciando configuración del iframe...');
 
       // Crear y cargar el script de Arcane
       const script = document.createElement('script');
       script.src = 'https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e';
       script.onload = () => {
-        console.log('✅ Script de Arcane cargado');
+        console.log('✅ Script de Arcane cargado, iniciando player...');
         window.initArcanePlayer?.();
       };
       document.body.appendChild(script);
       
       const handleArcanePlayerLoaded = () => {
-        console.log('🎮 ArcanePlayer cargado, configurando eventos...');
+        console.log('🎮 ArcanePlayer cargado');
         playerRef.current = window.ArcanePlayer;
-        
-        // Eventos básicos
-        playerRef.current?.onPlayerEvent('loading', () => {
-          console.log('🔄 Loading player...');
-        });
 
-        playerRef.current?.onPlayerEvent('ready', () => {
-          console.log('✅ Player ready');
-        });
-
-        // Eventos de interacción
-        playerRef.current?.onReceiveEvent('CustomUIEventResponse', (response: string) => {
-          console.log('👆 Interacción detectada:', response);
-        });
-
-        playerRef.current?.onReceiveEvent('event.MyCustomEventWithData', (response: string) => {
-          console.log('🎯 Evento custom recibido:', response);
-        });
-
-        // Eventos de inactividad
+        // Solo nos enfocamos en los eventos de inactividad
         playerRef.current?.onPlayerEvent('afkWarning', () => {
-          console.log('⚠️ AFK Warning - cerrando iframe');
+          console.log('⚠️ Detectada inactividad - cerrando sesión...');
+          // Forzar cierre inmediato
+          setShowVideo(true);
           const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
           if (iframe) {
-            iframe.parentNode?.removeChild(iframe);
+            iframe.remove();
             console.log('✅ Iframe removido');
+            window.location.reload();
           }
-          setShowVideo(true);
-          window.location.reload();
-        });
-
-        playerRef.current?.onPlayerEvent('afkWarningDeactivate', () => {
-          console.log('✅ AFK Warning desactivado');
-        });
-
-        playerRef.current?.onPlayerEvent('afkTimedOut', () => {
-          console.log('⚠️ AFK Timeout');
         });
 
         // Iniciar el player
         playerRef.current?.play();
-        console.log('▶️ Player iniciado');
+        console.log('▶️ Player iniciado y escuchando eventos de inactividad');
       };
 
-      console.log('🎭 Agregando listener para ArcanePlayerLoaded...');
       window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
       
       return () => {
-        console.log('🧹 Limpiando...');
         script.remove();
         window.removeEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
       };
