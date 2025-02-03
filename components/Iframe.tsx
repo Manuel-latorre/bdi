@@ -40,8 +40,18 @@ const VideoToIframe = () => {
 
       window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
 
+      // Agregar listener para desconexión del WebSocket
+      const handleDisconnect = () => {
+        console.log('Desconexión detectada');
+        setShowVideo(true);
+        window.location.reload();
+      };
+
+      window.addEventListener('disconnect', handleDisconnect);
+
       return () => {
         window.removeEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
+        window.removeEventListener('disconnect', handleDisconnect);
       };
     }
   }, [showVideo]);
