@@ -14,37 +14,91 @@ declare global {
 const VideoToIframe = () => {
   const [showVideo, setShowVideo] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
+  const inactivityTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const INACTIVITY_TIMEOUT = 59000; // 59 segundos
 
   useEffect(() => {
     const handleArcanePlayerLoaded = () => {
       if (window.ArcanePlayer) {
         console.log("ArcanePlayer cargado correctamente");
 
-        // Escuchar eventos del player
+        // Detectar advertencia de inactividad
         window.ArcanePlayer.onPlayerEvent("afkWarning", () => {
           console.log("⚠️ Advertencia de inactividad");
         });
 
+        // Usuario vuelve a estar activo
         window.ArcanePlayer.onPlayerEvent("afkWarningDeactivate", () => {
           console.log("✅ Usuario activo nuevamente");
-          setShowVideo(true);
-          window.location.reload();
+          resetInactivityTimer();
         });
 
+        // Usuario agotó el tiempo de inactividad
         window.ArcanePlayer.onPlayerEvent("afkTimedOut", () => {
-          console.log("⛔ Tiempo de inactividad agotado");
-          setShowVideo(true);
-          window.location.reload();
+          console.log("⛔ Tiempo de inactividad agotado, recargando...");
+          handleTimeout();
         });
       }
     };
 
+    // Escuchar la carga del ArcanePlayer
     window.addEventListener("ArcanePlayerLoaded", handleArcanePlayerLoaded);
 
     return () => {
       window.removeEventListener("ArcanePlayerLoaded", handleArcanePlayerLoaded);
     };
-  }, []); // Ejecutar solo una vez cuando el componente se monta
+  }, []);
+
+  // Manejar el inicio de la experiencia
+  const handleStartExperience = () => {
+    setShowVideo(false);
+    resetInactivityTimer();
+  };
+
+  // Reiniciar el temporizador de inactividad
+  const resetInactivityTimer = () => {
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+    inactivityTimerRef.current = setTimeout(() => {
+      console.log("⏳ Tiempo de inactividad agotado, volviendo al video...");
+      setShowVideo(true);
+      window.location.reload();
+    }, INACTIVITY_TIMEOUT);
+  };
+
+  // Manejar la inactividad del usuario
+  const handleTimeout = () => {
+    setShowVideo(true);
+    window.location.reload();
+  };
+
+  // Detectar actividad del usuario y reiniciar el temporizador
+  useEffect(() => {
+    if (!showVideo) {
+      resetInactivityTimer();
+
+      const interactionEvents = ["mousemove", "click", "touchstart", "touchmove", "keydown"];
+
+      const handleUserInteraction = () => {
+        resetInactivityTimer();
+      };
+
+      interactionEvents.forEach(event =>
+        document.addEventListener(event, handleUserInteraction)
+      );
+
+      return () => {
+        if (inactivityTimerRef.current) {
+          clearTimeout(inactivityTimerRef.current);
+        }
+        interactionEvents.forEach(event =>
+          document.removeEventListener(event, handleUserInteraction)
+        );
+      };
+    }
+  }, [showVideo]);
 
   return (
     <div className="relative w-full h-screen">
@@ -78,7 +132,7 @@ const VideoToIframe = () => {
             className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
               showOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
-            onClick={() => setShowVideo(false)}
+            onClick={handleStartExperience}
           >
             <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
               Comenzar
@@ -90,15 +144,15 @@ const VideoToIframe = () => {
         </div>
       ) : (
         <iframe
-        id="arcane-player-frame"
-        src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
-        frameBorder="0"
-        width="100%"
-        height="100%"
-        className="w-full h-full"
-        allow="fullscreen; microphone"
-        allowFullScreen
-        data-enable-events-passthrough="true"
+          id="arcane-player-frame"
+          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
+          frameBorder="0"
+          width="100%"
+          height="100%"
+          className="w-full h-full"
+          allow="fullscreen; microphone"
+          allowFullScreen
+          data-enable-events-passthrough="true"
         />
       )}
     </div>
@@ -106,6 +160,7 @@ const VideoToIframe = () => {
 };
 
 export default VideoToIframe;
+
 /* 
 
 "use client";
