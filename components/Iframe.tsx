@@ -17,40 +17,16 @@ const VideoToIframe = () => {
 
   useEffect(() => {
     if (!showVideo) {
-      const handleArcanePlayerLoaded = () => {
-        if (window.ArcanePlayer) {
-          // Escuchar eventos del player
-          window.ArcanePlayer.onPlayerEvent('afkWarning', () => {
-            console.log('⚠️ Advertencia de inactividad');
-          });
-
-          window.ArcanePlayer.onPlayerEvent('afkWarningDeactivate', () => {
-            console.log('✅ Usuario activo nuevamente');
-            setShowVideo(true);
-            window.location.reload();
-          });
-
-          window.ArcanePlayer.onPlayerEvent('afkTimedOut', () => {
-            console.log('⛔ Tiempo de inactividad agotado');
-            setShowVideo(true);
-            window.location.reload();
-          });
-        }
-      };
-
-      window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
-
-      // Agregar listener para desconexión del WebSocket
       const handleDisconnect = () => {
-        console.log('Desconexión detectada');
+        console.log('Desconexión detectada - Volviendo al video');
         setShowVideo(true);
         window.location.reload();
       };
 
+      // Escuchar el evento de desconexión
       window.addEventListener('disconnect', handleDisconnect);
 
       return () => {
-        window.removeEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
         window.removeEventListener('disconnect', handleDisconnect);
       };
     }
@@ -95,7 +71,6 @@ const VideoToIframe = () => {
           className="w-full h-full"
           allow="fullscreen; microphone"
           allowFullScreen
-          data-enable-events-passthrough="true"
         />
       )}
     </div>
