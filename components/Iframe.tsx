@@ -166,10 +166,11 @@ const VideoToIframe = () => {
             data-enable-events-passthrough="true"
             data-hide-ui-controls="true"
             data-autoplay="false"
+            data-origin={typeof window !== 'undefined' ? window.location.origin : ''}
           ></div>
           <iframe
             id="arcane-player-frame"
-            src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
+            src={`https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==&origin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`}
             frameBorder="0"
             width="100%"
             height="100%"
