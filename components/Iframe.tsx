@@ -3,33 +3,41 @@
 import React, { useState, useEffect } from "react";
 import Arrow from "./Arrow";
 
+declare global {
+  interface Window {
+    ArcanePlayer: {
+      onPlayerEvent: (event: string, callback: () => void) => void;
+    };
+  }
+}
+
 const VideoToIframe = () => {
   const [showVideo, setShowVideo] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
     if (!showVideo) {
-      // Configurar listener para eventos de inactividad
       const handleArcanePlayerLoaded = () => {
-        if ((window as any).ArcanePlayer) {
-          // Escuchar eventos de inactividad desde Unreal Engine
-          (window as any).ArcanePlayer.onReceiveEvent('afkWarning', () => {
+        if (window.ArcanePlayer) {
+          // Escuchar eventos del player
+          window.ArcanePlayer.onPlayerEvent('afkWarning', () => {
             console.log('⚠️ Advertencia de inactividad');
-            window.location.reload();
-            setShowVideo(true); // Volver al video
-
-            // Mostrar alguna advertencia si lo deseas
           });
 
-          (window as any).ArcanePlayer.onReceiveEvent('afkTimeout', () => {
-            console.log('⛔ Tiempo de inactividad agotado');
+          window.ArcanePlayer.onPlayerEvent('afkWarningDeactivate', () => {
+            console.log('✅ Usuario activo nuevamente');
+            setShowVideo(true);
             window.location.reload();
-            setShowVideo(true); // Volver al video
+          });
+
+          window.ArcanePlayer.onPlayerEvent('afkTimedOut', () => {
+            console.log('⛔ Tiempo de inactividad agotado');
+            setShowVideo(true);
+            window.location.reload();
           });
         }
       };
 
-      // Esperar a que el player esté listo
       window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
 
       return () => {
