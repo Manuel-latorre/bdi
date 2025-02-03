@@ -176,7 +176,7 @@ const VideoToIframe = () => {
           </button>
         </div>
       ) : (
-        <>
+        <div id="am-container" className="w-full h-full">
           <div
             id="arcane-player"
             data-project-id="5067"
@@ -187,21 +187,12 @@ const VideoToIframe = () => {
             data-enable-events-passthrough="true"
             data-hide-ui-controls="true"
             data-autoplay="false"
-            data-origin={
-              typeof window !== "undefined" ? window.location.origin : ""
-            }
           ></div>
-          <iframe
-            id="arcane-player-frame"
+          <script 
             src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e"
-            frameBorder="0"
-            width="100%"
-            height="100%"
-            className="w-full h-full"
-            allow="fullscreen; microphone"
-            allowFullScreen
-          />
-        </>
+            defer
+          ></script>
+        </div>
       )}
     </div>
   );
