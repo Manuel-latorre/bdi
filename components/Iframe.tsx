@@ -3,7 +3,6 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
-import { useRouter } from "next/navigation";
 
 interface ArcanePlayer {
   play: () => void;
@@ -21,7 +20,6 @@ declare global {
 }
 
 const VideoToIframe = () => {
-  const router = useRouter();
   const [showVideo, setShowVideo] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
