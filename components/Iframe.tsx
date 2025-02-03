@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
 import { useRouter } from "next/navigation";
@@ -7,10 +6,7 @@ import { useRouter } from "next/navigation";
 interface ArcanePlayer {
   play: () => void;
   emitUIEvent: (descriptor: string | object) => boolean;
-  onReceiveEvent: (
-    name: string,
-    listener: (response: string) => void
-  ) => void;
+  onReceiveEvent: (name: string, listener: (response: string) => void) => void;
   onPlayerEvent: (name: string, listener: (data?: any) => void) => void;
   toggleFullscreen: () => boolean;
 }
@@ -49,9 +45,11 @@ const VideoToIframe = () => {
         "tizen",
         "roku",
         "firetv",
-        "androidtv"
+        "androidtv",
       ];
-      setIsSmartTV(smartTVKeywords.some((keyword) => userAgent.includes(keyword)));
+      setIsSmartTV(
+        smartTVKeywords.some((keyword) => userAgent.includes(keyword))
+      );
     }
   }, []);
 
@@ -65,62 +63,70 @@ const VideoToIframe = () => {
 
   useEffect(() => {
     if (!showVideo) {
-      console.log('🚀 Iniciando configuración del iframe...');
-      
+      console.log("🚀 Iniciando configuración del iframe...");
+
       // Asegurarnos de que el origen esté disponible antes de cargar el script
-      const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "";
+
       // Configurar el div de Arcane con el origen
-      const arcaneDiv = document.getElementById('arcane-player');
+      const arcaneDiv = document.getElementById("arcane-player");
       if (arcaneDiv) {
-        arcaneDiv.setAttribute('data-origin', origin);
+        arcaneDiv.setAttribute("data-origin", origin);
       }
 
-      const script = document.createElement('script');
-      script.src = `https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e?origin=${encodeURIComponent(origin)}`;
+      const script = document.createElement("script");
+      script.src = `https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e?origin=${encodeURIComponent(
+        origin
+      )}`;
       script.onload = () => {
-        console.log('✅ Script de Arcane cargado, iniciando player...');
+        console.log("✅ Script de Arcane cargado, iniciando player...");
         window.initArcanePlayer?.();
       };
       document.body.appendChild(script);
-      
+
       const handleArcanePlayerLoaded = () => {
-        console.log('🎮 ArcanePlayer cargado');
+        console.log("🎮 ArcanePlayer cargado");
         playerRef.current = window.ArcanePlayer;
 
         // Escuchamos múltiples eventos de inactividad
-        playerRef.current?.onPlayerEvent('afkWarning', () => {
-          console.log('⚠️ Advertencia de inactividad');
+        playerRef.current?.onPlayerEvent("afkWarning", () => {
+          console.log("⚠️ Advertencia de inactividad");
         });
 
-        playerRef.current?.onPlayerEvent('afkWarningDeactivate', () => {
-          console.log('✅ Usuario activo nuevamente');
+        playerRef.current?.onPlayerEvent("afkWarningDeactivate", () => {
+          console.log("✅ Usuario activo nuevamente");
         });
 
-        playerRef.current?.onPlayerEvent('afkTimedOut', () => {
-          console.log('⛔ Tiempo de inactividad agotado - cerrando sesión...');
+        playerRef.current?.onPlayerEvent("afkTimedOut", () => {
+          console.log("⛔ Tiempo de inactividad agotado - cerrando sesión...");
           setShowVideo(true);
-          router.push('/');
+          router.push("/");
           window.location.reload();
-          const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
+          const iframe = document.getElementById(
+            "arcane-player-frame"
+          ) as HTMLIFrameElement;
           if (iframe) {
             iframe.remove();
-            console.log('✅ Iframe removido');
-            router.push('/');
+            console.log("✅ Iframe removido");
+            router.push("/");
             window.location.reload();
           }
         });
 
         // Iniciar el player
         playerRef.current?.play();
-        console.log('▶️ Player iniciado y escuchando eventos de inactividad');
+        console.log("▶️ Player iniciado y escuchando eventos de inactividad");
       };
 
-      window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
-      
+      window.addEventListener("ArcanePlayerLoaded", handleArcanePlayerLoaded);
+
       return () => {
         script.remove();
-        window.removeEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
+        window.removeEventListener(
+          "ArcanePlayerLoaded",
+          handleArcanePlayerLoaded
+        );
       };
     }
   }, [showVideo]);
@@ -131,7 +137,9 @@ const VideoToIframe = () => {
         <div
           className="relative w-full h-full"
           onMouseEnter={!isSmartTV ? handleShowOverlay : undefined} // Solo en desktop
-          onMouseLeave={!isSmartTV && isDesktop ? () => setShowOverlay(false) : undefined} // Solo en desktop
+          onMouseLeave={
+            !isSmartTV && isDesktop ? () => setShowOverlay(false) : undefined
+          } // Solo en desktop
           onClick={handleShowOverlay} // Click en cualquier dispositivo
           onTouchStart={handleShowOverlay} // Soporte táctil
         >
@@ -175,16 +183,21 @@ const VideoToIframe = () => {
             id="arcane-player"
             data-project-id="5067"
             data-project-key="e782cf6b-32a3-4b2b-a2be-468ec62e4c34"
+            data-token="yRW52L4FiXbs"
             data-idle-timeout="200"
             data-capture-mouse="false"
             data-enable-events-passthrough="true"
             data-hide-ui-controls="true"
             data-autoplay="false"
-            data-origin={typeof window !== 'undefined' ? window.location.origin : ''}
+            data-origin={
+              typeof window !== "undefined" ? window.location.origin : ""
+            }
           ></div>
           <iframe
             id="arcane-player-frame"
-            src={`https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==&origin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`}
+            src={`https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==&origin=${encodeURIComponent(
+              typeof window !== "undefined" ? window.location.origin : ""
+            )}`}
             frameBorder="0"
             width="100%"
             height="100%"
@@ -199,9 +212,6 @@ const VideoToIframe = () => {
 };
 
 export default VideoToIframe;
-
-
-
 
 /* 
 
