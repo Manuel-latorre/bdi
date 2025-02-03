@@ -189,23 +189,16 @@ const VideoToIframe = () => {
             Recargar experiencia
           </button>
 
-          <div id="am-container" className="w-full h-full">
-            <div
-              id="arcane-player"
-              data-project-id="5067"
-              data-project-key="e782cf6b-32a3-4b2b-a2be-468ec62e4c34"
-              data-token="yRW52L4FiXbs"
-              data-idle-timeout="200"
-              data-capture-mouse="false"
-              data-enable-events-passthrough="true"
-              data-hide-ui-controls="true"
-              data-autoplay="false"
-            ></div>
-            <script 
-              src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e"
-              defer
-            ></script>
-          </div>
+          <iframe
+          id="arcane-player-frame"
+          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
+          frameBorder="0"
+          width="100%"
+          height="100%"
+          className="w-full h-full"
+          allow="fullscreen; microphone"
+          allowFullScreen
+        />
         </div>
       )}
     </div>
