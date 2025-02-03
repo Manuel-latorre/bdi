@@ -28,6 +28,7 @@ const VideoToIframe = () => {
   const [isSmartTV, setIsSmartTV] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const playerRef = useRef<any>(null);
+  const [shouldReload, setShouldReload] = useState(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -89,29 +90,21 @@ const VideoToIframe = () => {
         console.log("🎮 ArcanePlayer cargado");
         playerRef.current = window.ArcanePlayer;
 
-        // Escuchamos múltiples eventos de inactividad
+        // Escuchamos eventos de inactividad
         playerRef.current?.onPlayerEvent("afkWarning", () => {
           console.log("⚠️ Advertencia de inactividad");
-        });
-
-        playerRef.current?.onPlayerEvent("afkWarningDeactivate", () => {
-          console.log("✅ Usuario activo nuevamente");
+          setShouldReload(true);
+          setTimeout(() => {
+            setShowVideo(true);
+            window.location.reload();
+          }, 3000); // Espera 3 segundos antes de recargar
         });
 
         playerRef.current?.onPlayerEvent("afkTimedOut", () => {
-          console.log("⛔ Tiempo de inactividad agotado - cerrando sesión...");
+          console.log("⛔ Tiempo de inactividad agotado");
+          setShouldReload(true);
           setShowVideo(true);
-          router.push("/");
           window.location.reload();
-          const iframe = document.getElementById(
-            "arcane-player-frame"
-          ) as HTMLIFrameElement;
-          if (iframe) {
-            iframe.remove();
-            console.log("✅ Iframe removido");
-            router.push("/");
-            window.location.reload();
-          }
         });
 
         // Iniciar el player
@@ -179,26 +172,36 @@ const VideoToIframe = () => {
         </div>
       ) : (
         <div className="relative w-full h-full">
+          {/* Botón oculto que se ejecuta automáticamente */}
           <button
             onClick={() => {
               setShowVideo(true);
               window.location.reload();
             }}
-            className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 bg-white text-black rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-200"
+            className={`absolute top-4 left-1/2 transform -translate-x-1/2 z-50 px-4 py-2 bg-white text-black rounded-full shadow-lg transition-opacity duration-200 ${
+              shouldReload ? 'opacity-100' : 'opacity-0 pointer-events-none'
+            }`}
           >
             Recargar experiencia
           </button>
 
-          <iframe
-          id="arcane-player-frame"
-          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
-          frameBorder="0"
-          width="100%"
-          height="100%"
-          className="w-full h-full"
-          allow="fullscreen; microphone"
-          allowFullScreen
-        />
+          {/* Contenedor Arcane */}
+          <div id="am-container" className="w-full h-full">
+            <div
+              id="arcane-player"
+              data-project-id="5067"
+              data-project-key="e782cf6b-32a3-4b2b-a2be-468ec62e4c34"
+              data-token="yRW52L4FiXbs"
+              data-capture-mouse="true"
+              data-enable-events-passthrough="true"
+              data-hide-ui-controls="true"
+              data-autoplay="true"
+            ></div>
+            <script 
+              src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e"
+              defer
+            ></script>
+          </div>
         </div>
       )}
     </div>
