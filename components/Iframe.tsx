@@ -65,7 +65,6 @@ const VideoToIframe = () => {
     if (!showVideo) {
       console.log('🚀 Iniciando configuración del iframe...');
 
-      // Crear y cargar el script de Arcane
       const script = document.createElement('script');
       script.src = 'https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e';
       script.onload = () => {
@@ -78,10 +77,17 @@ const VideoToIframe = () => {
         console.log('🎮 ArcanePlayer cargado');
         playerRef.current = window.ArcanePlayer;
 
-        // Solo nos enfocamos en los eventos de inactividad
+        // Escuchamos múltiples eventos de inactividad
         playerRef.current?.onPlayerEvent('afkWarning', () => {
-          console.log('⚠️ Detectada inactividad - cerrando sesión...');
-          // Forzar cierre inmediato
+          console.log('⚠️ Advertencia de inactividad');
+        });
+
+        playerRef.current?.onPlayerEvent('afkWarningDeactivate', () => {
+          console.log('✅ Usuario activo nuevamente');
+        });
+
+        playerRef.current?.onPlayerEvent('afkTimedOut', () => {
+          console.log('⛔ Tiempo de inactividad agotado - cerrando sesión...');
           setShowVideo(true);
           const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
           if (iframe) {
