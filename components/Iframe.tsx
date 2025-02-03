@@ -16,26 +16,40 @@ const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
-    if (!showVideo) {
-      const handleDisconnect = () => {
-        console.log('Desconexión detectada - Volviendo al video');
-        setShowVideo(true);
-        window.location.reload();
-      };
+    const handleArcanePlayerLoaded = () => {
+      if (window.ArcanePlayer) {
+        console.log("ArcanePlayer cargado correctamente");
 
-      // Escuchar el evento de desconexión
-      window.addEventListener('disconnect', handleDisconnect);
+        // Escuchar eventos del player
+        window.ArcanePlayer.onPlayerEvent("afkWarning", () => {
+          console.log("⚠️ Advertencia de inactividad");
+        });
 
-      return () => {
-        window.removeEventListener('disconnect', handleDisconnect);
-      };
-    }
-  }, [showVideo]);
+        window.ArcanePlayer.onPlayerEvent("afkWarningDeactivate", () => {
+          console.log("✅ Usuario activo nuevamente");
+          setShowVideo(true);
+          window.location.reload();
+        });
+
+        window.ArcanePlayer.onPlayerEvent("afkTimedOut", () => {
+          console.log("⛔ Tiempo de inactividad agotado");
+          setShowVideo(true);
+          window.location.reload();
+        });
+      }
+    };
+
+    window.addEventListener("ArcanePlayerLoaded", handleArcanePlayerLoaded);
+
+    return () => {
+      window.removeEventListener("ArcanePlayerLoaded", handleArcanePlayerLoaded);
+    };
+  }, []); // Ejecutar solo una vez cuando el componente se monta
 
   return (
     <div className="relative w-full h-screen">
       {showVideo ? (
-        <div 
+        <div
           className="relative w-full h-full"
           onMouseEnter={() => setShowOverlay(true)}
           onMouseLeave={() => setShowOverlay(false)}
@@ -48,18 +62,27 @@ const VideoToIframe = () => {
             playsInline
             autoPlay
           >
-            <source src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4" type="video/mp4" />
+            <source
+              src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4"
+              type="video/mp4"
+            />
           </video>
-          
-          <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${showOverlay ? "opacity-50" : "opacity-0"}`} />
-          
+
+          <div
+            className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+              showOverlay ? "opacity-50" : "opacity-0"
+            }`}
+          />
+
           <button
             className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
               showOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
             }`}
             onClick={() => setShowVideo(false)}
           >
-            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">Comenzar</p>
+            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
+              Comenzar
+            </p>
             <div className="translate-y-4 translate-x-4">
               <Arrow />
             </div>
@@ -67,9 +90,8 @@ const VideoToIframe = () => {
         </div>
       ) : (
         <iframe
-          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
+          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY..."
           className="w-full h-full"
-          allow="fullscreen; microphone"
           allowFullScreen
         />
       )}
@@ -78,7 +100,6 @@ const VideoToIframe = () => {
 };
 
 export default VideoToIframe;
-
 /* 
 
 "use client";
