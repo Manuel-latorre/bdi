@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Arrow from "./Arrow";
+import { useRouter } from "next/navigation";
 
 interface ArcanePlayer {
   play: () => void;
@@ -22,6 +23,7 @@ declare global {
 }
 
 const VideoToIframe = () => {
+  const router = useRouter();
   const [showVideo, setShowVideo] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -64,9 +66,18 @@ const VideoToIframe = () => {
   useEffect(() => {
     if (!showVideo) {
       console.log('🚀 Iniciando configuración del iframe...');
+      
+      // Asegurarnos de que el origen esté disponible antes de cargar el script
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      
+      // Configurar el div de Arcane con el origen
+      const arcaneDiv = document.getElementById('arcane-player');
+      if (arcaneDiv) {
+        arcaneDiv.setAttribute('data-origin', origin);
+      }
 
       const script = document.createElement('script');
-      script.src = 'https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e';
+      script.src = `https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e?origin=${encodeURIComponent(origin)}`;
       script.onload = () => {
         console.log('✅ Script de Arcane cargado, iniciando player...');
         window.initArcanePlayer?.();
@@ -89,10 +100,13 @@ const VideoToIframe = () => {
         playerRef.current?.onPlayerEvent('afkTimedOut', () => {
           console.log('⛔ Tiempo de inactividad agotado - cerrando sesión...');
           setShowVideo(true);
+          router.push('/');
+          window.location.reload();
           const iframe = document.getElementById('arcane-player-frame') as HTMLIFrameElement;
           if (iframe) {
             iframe.remove();
             console.log('✅ Iframe removido');
+            router.push('/');
             window.location.reload();
           }
         });
