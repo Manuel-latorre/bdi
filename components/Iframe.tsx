@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Arrow from "./Arrow";
 
 declare global {
@@ -13,89 +13,56 @@ declare global {
 
 const VideoToIframe = () => {
   const [showVideo, setShowVideo] = useState(true);
-  const [showOverlay, setShowOverlay] = useState(false);
-  const inactivityTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const inactivityTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const INACTIVITY_TIMEOUT = 59000; // 59 segundos
 
-  useEffect(() => {
-    const handleArcanePlayerLoaded = () => {
-      if (window.ArcanePlayer) {
-        console.log("ArcanePlayer cargado correctamente");
-
-        // Detectar advertencia de inactividad
-        window.ArcanePlayer.onPlayerEvent("afkWarning", () => {
-          console.log("⚠️ Advertencia de inactividad");
-        });
-
-        // Usuario vuelve a estar activo
-        window.ArcanePlayer.onPlayerEvent("afkWarningDeactivate", () => {
-          console.log("✅ Usuario activo nuevamente");
-          resetInactivityTimer();
-        });
-
-        // Usuario agotó el tiempo de inactividad
-        window.ArcanePlayer.onPlayerEvent("afkTimedOut", () => {
-          console.log("⛔ Tiempo de inactividad agotado, recargando...");
-          handleTimeout();
-        });
-      }
-    };
-
-    // Escuchar la carga del ArcanePlayer
-    window.addEventListener("ArcanePlayerLoaded", handleArcanePlayerLoaded);
-
-    return () => {
-      window.removeEventListener("ArcanePlayerLoaded", handleArcanePlayerLoaded);
-    };
-  }, []);
-
-  // Manejar el inicio de la experiencia
-  const handleStartExperience = () => {
-    setShowVideo(false);
-    resetInactivityTimer();
-  };
-
-  // Reiniciar el temporizador de inactividad
   const resetInactivityTimer = () => {
     if (inactivityTimerRef.current) {
       clearTimeout(inactivityTimerRef.current);
     }
     inactivityTimerRef.current = setTimeout(() => {
-      console.log("⏳ Tiempo de inactividad agotado, volviendo al video...");
+      console.log("⏳ Inactividad detectada. Recargando...");
       setShowVideo(true);
       window.location.reload();
     }, INACTIVITY_TIMEOUT);
   };
 
-  // Manejar la inactividad del usuario
-  const handleTimeout = () => {
-    setShowVideo(true);
-    window.location.reload();
-  };
-
-  // Detectar actividad del usuario y reiniciar el temporizador
   useEffect(() => {
     if (!showVideo) {
       resetInactivityTimer();
 
-      const interactionEvents = ["mousemove", "click", "touchstart", "touchmove", "keydown"];
+      const setupArcanePlayer = () => {
+        if (window.ArcanePlayer) {
+          console.log("🎮 ArcanePlayer detectado, configurando eventos...");
 
-      const handleUserInteraction = () => {
-        resetInactivityTimer();
+          // Detectar cuando el usuario vuelve a interactuar
+          window.ArcanePlayer.onPlayerEvent("afkWarningDeactivate", () => {
+            console.log("✅ Usuario activo en el iframe. Reiniciando temporizador.");
+            resetInactivityTimer();
+          });
+
+          // Opcional: Escuchar otros eventos del iframe
+          window.ArcanePlayer.onPlayerEvent("loading", () => console.log("⏳ Cargando..."));
+          window.ArcanePlayer.onPlayerEvent("ready", () => console.log("✅ Iframe listo."));
+        } else {
+          console.warn("⚠️ ArcanePlayer no está disponible aún.");
+        }
       };
 
-      interactionEvents.forEach(event =>
-        document.addEventListener(event, handleUserInteraction)
-      );
+      // Esperar a que ArcanePlayer esté disponible
+      const interval = setInterval(() => {
+        if (window.ArcanePlayer) {
+          setupArcanePlayer();
+          clearInterval(interval);
+        }
+      }, 500);
 
       return () => {
         if (inactivityTimerRef.current) {
           clearTimeout(inactivityTimerRef.current);
         }
-        interactionEvents.forEach(event =>
-          document.removeEventListener(event, handleUserInteraction)
-        );
+        clearInterval(interval);
       };
     }
   }, [showVideo]);
@@ -103,43 +70,18 @@ const VideoToIframe = () => {
   return (
     <div className="relative w-full h-screen">
       {showVideo ? (
-        <div
-          className="relative w-full h-full"
-          onMouseEnter={() => setShowOverlay(true)}
-          onMouseLeave={() => setShowOverlay(false)}
-          onClick={() => setShowOverlay(true)}
-        >
-          <video
-            className="w-full h-full object-cover"
-            loop
-            muted
-            playsInline
-            autoPlay
-          >
+        <div className="relative w-full h-full">
+          <video className="w-full h-full object-cover" loop muted playsInline autoPlay>
             <source
               src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4"
               type="video/mp4"
             />
           </video>
-
-          <div
-            className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-              showOverlay ? "opacity-50" : "opacity-0"
-            }`}
-          />
-
           <button
-            className={`px-2 py-1 rounded-full text-center border bg-white text-black flex items-start justify-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 transition-opacity duration-300 ${
-              showOverlay ? "opacity-100" : "opacity-0 pointer-events-none"
-            }`}
-            onClick={handleStartExperience}
+            className="px-4 py-2 rounded-full bg-white text-black absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
+            onClick={() => setShowVideo(false)}
           >
-            <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">
-              Comenzar
-            </p>
-            <div className="translate-y-4 translate-x-4">
-              <Arrow />
-            </div>
+            Comenzar
           </button>
         </div>
       ) : (
