@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import Arrow from "./Arrow";
+/* import Arrow from "./Arrow"; */
 
 declare global {
   interface Window {
@@ -10,6 +10,7 @@ declare global {
     };
   }
 }
+
 
 const VideoToIframe = () => {
   const [showVideo, setShowVideo] = useState(true);
