@@ -1,5 +1,4 @@
 import ArcanePlayer from "@/components/ArcanePlayer";
-/* import VideoToIframe from "@/components/Iframe"; */
 
 export default function Home() {
   return (
@@ -10,4 +9,3 @@ export default function Home() {
   );
 }
 
-{/* <VideoToIframe/> */}
