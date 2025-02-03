@@ -90,9 +90,15 @@ const VideoToIframe = () => {
         </div>
       ) : (
         <iframe
-          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY..."
-          className="w-full h-full"
-          allowFullScreen
+        id="arcane-player-frame"
+        src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
+        frameBorder="0"
+        width="100%"
+        height="100%"
+        className="w-full h-full"
+        allow="fullscreen; microphone"
+        allowFullScreen
+        data-enable-events-passthrough="true"
         />
       )}
     </div>
