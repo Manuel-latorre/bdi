@@ -17,43 +17,38 @@ const VideoToIframe = () => {
       iframeRef.current.contentWindow?.postMessage({
         type: 'uiEvent',
         payload: descriptor
-      }, '*');
+      }, 'https://embed.arcanemirage.com'); // Especificamos el origen exacto
     }
   };
 
   useEffect(() => {
     // Escuchar mensajes del iframe
     const handleMessage = (event: MessageEvent) => {
+      // Verificar que el mensaje viene de Arcane
+      if (event.origin !== 'https://embed.arcanemirage.com') return;
+      
       try {
         const data = event.data;
-        console.log("Mensaje recibido:", data);
+        if (!data || typeof data !== 'object') return;
+        
+        console.log("Mensaje de Arcane recibido:", data);
 
         switch (data.type) {
           case 'afkWarning':
             console.log("AFK Warning detectado");
             setShowIframe(false);
+            window.location.reload();
             emitUIEvent({
               event: 'AFKDetected',
               data: { status: 'warning' }
             });
             break;
 
-          case 'afkWarningDeactivate':
-            console.log("AFK Warning desactivado");
-            setShowIframe(true);
-            break;
-
+          case 'disconnected':
           case 'afkTimedOut':
             console.log("Sesión terminada por inactividad");
             setShowIframe(false);
-            emitUIEvent({
-              event: 'AFKDetected',
-              data: { status: 'timedOut' }
-            });
-            break;
-
-          case 'loading':
-            console.log("Cargando experiencia...");
+            window.location.reload(); // Recargar la página en caso de desconexión
             break;
 
           case 'ready':
@@ -62,12 +57,13 @@ const VideoToIframe = () => {
             // Enviar evento de prueba cuando la experiencia está lista
             emitUIEvent({
               event: 'TestEvent',
-              data: { message: 'Hello from frontend!' }
+              data: { message: 'Experience is ready!' }
             });
             break;
 
-          case 'customEvent':
-            console.log("Evento personalizado recibido:", data.payload);
+          case 'error':
+            console.error("Error en Arcane:", data.payload);
+            setShowIframe(false);
             break;
         }
       } catch (error) {
@@ -77,19 +73,21 @@ const VideoToIframe = () => {
 
     window.addEventListener('message', handleMessage);
 
-    // Configurar un intervalo para enviar el evento TestEvent cada 30 segundos
-    const testInterval = setInterval(() => {
-      emitUIEvent({
-        event: 'TestEvent',
-        data: { message: 'Periodic test from frontend!', timestamp: new Date().toISOString() }
-      });
-    }, 30000);
+    // Configurar un intervalo para mantener la sesión activa
+    const keepAliveInterval = setInterval(() => {
+      if (showIframe) {
+        emitUIEvent({
+          event: 'KeepAlive',
+          data: { timestamp: new Date().toISOString() }
+        });
+      }
+    }, 15000); // Cada 15 segundos
 
     return () => {
       window.removeEventListener('message', handleMessage);
-      clearInterval(testInterval);
+      clearInterval(keepAliveInterval);
     };
-  }, []);
+  }, [showIframe]); // Agregamos showIframe como dependencia
 
   const startExperience = () => {
     setShowIframe(true);
