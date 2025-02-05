@@ -12,45 +12,21 @@ declare global {
 }
 
 const VideoToIframe = () => {
-  /* const [showVideo, setShowVideo] = useState(true); */
   const [showOverlay, setShowOverlay] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [showIframe, setShowIframe] = useState(false);
-  const inactivityTimeout = useRef<NodeJS.Timeout | null>(null);
 
   const startExperience = () => {
     setShowIframe(true);
-    resetInactivityTimer();
-  };
-
-  const resetInactivityTimer = () => {
-    if (inactivityTimeout.current) {
-      clearTimeout(inactivityTimeout.current);
-    }
-    inactivityTimeout.current = setTimeout(() => {
-      setShowIframe(false); // Regresa al video tras inactividad
-    }, 60000); // 60 segundos sin actividad
   };
 
   useEffect(() => {
-    const handleUserInteraction = () => {
-      resetInactivityTimer();
-    };
-
-    const iframe = iframeRef.current;
-    if (iframe) {
-      iframe.contentWindow?.addEventListener("touchstart", handleUserInteraction);
-      iframe.contentWindow?.addEventListener("mousedown", handleUserInteraction);
+    if (typeof window !== "undefined" && window.ArcanePlayer) {
+      window.ArcanePlayer.onPlayerEvent("afkWarning", () => {
+        window.location.reload(); // Refresca la pantalla al detectar inactividad
+      });
     }
-
-    return () => {
-      if (iframe) {
-        iframe.contentWindow?.removeEventListener("touchstart", handleUserInteraction);
-        iframe.contentWindow?.removeEventListener("mousedown", handleUserInteraction);
-      }
-    };
   }, []);
-
 
   return (
     <div className="relative w-full h-screen">
@@ -81,26 +57,25 @@ const VideoToIframe = () => {
           >
             <p className="text-xl uppercase tracking-wide translate-y-0.5 translate-x-4 font-medium">Comenzar</p>
             <div className="translate-y-4 translate-x-4">
-
               <Arrow />
             </div>
           </button>
         </div>
       ) : (
         <iframe
-        ref={iframeRef}
-        id="arcane-player-frame"
-        src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
-        frameBorder="0"
-        width="100%"
-        height="100%"
-        className="w-full h-full"
-        allow="fullscreen; microphone"
-        allowFullScreen
-        data-enable-events-passthrough="true"
-        data-enable-touch-input="true"
-        data-enable-fake-mouse-with-touch="true"
-      />
+          ref={iframeRef}
+          id="arcane-player-frame"
+          src="https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
+          frameBorder="0"
+          width="100%"
+          height="100%"
+          className="w-full h-full"
+          allow="fullscreen; microphone"
+          allowFullScreen
+          data-enable-events-passthrough="true"
+          data-enable-touch-input="true"
+          data-enable-fake-mouse-with-touch="true"
+        />
       )}
     </div>
   );
