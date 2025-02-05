@@ -15,19 +15,12 @@ const VideoToIframe = () => {
   // Función para manejar eventos UI desde el frontend hacia UE
   const emitUIEvent = (descriptor: string | { event: string; data: any }) => {
     if (socketRef.current?.readyState === WebSocket.OPEN) {
+      console.log("Emitiendo evento UI:", descriptor);
       socketRef.current.send(JSON.stringify({
         type: 'uiEvent',
         payload: descriptor
       }));
     }
-  };
-
-  const startExperience = () => {
-    setShowIframe(true);
-    emitUIEvent({
-      event: 'TestEvent',
-      data: { message: 'Hello from frontend!' }
-    });
   };
 
   const connectWebSocket = () => {
@@ -45,6 +38,12 @@ const VideoToIframe = () => {
         projectId: "e782cf6b-32a3-4b2b-a2be-468ec62e4c34",
         key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
       }));
+
+      // Enviar evento de prueba inmediatamente después de conectar
+      emitUIEvent({
+        event: 'TestEvent',
+        data: { message: 'Hello from frontend!' }
+      });
     };
 
     ws.onmessage = (event) => {
@@ -57,6 +56,11 @@ const VideoToIframe = () => {
           case 'afkWarning':
             console.log("AFK Warning detectado");
             setShowIframe(false);
+            // Emitir evento cuando se detecta AFK
+            emitUIEvent({
+              event: 'AFKDetected',
+              data: { status: 'warning' }
+            });
             break;
 
           case 'afkWarningDeactivate':
@@ -67,6 +71,11 @@ const VideoToIframe = () => {
           case 'afkTimedOut':
             console.log("Sesión terminada por inactividad");
             setShowIframe(false);
+            // Emitir evento cuando se termina la sesión por AFK
+            emitUIEvent({
+              event: 'AFKDetected',
+              data: { status: 'timedOut' }
+            });
             break;
 
           case 'loading':
@@ -76,6 +85,11 @@ const VideoToIframe = () => {
           case 'ready':
             console.log("Experiencia lista");
             setShowIframe(true);
+            // Emitir evento cuando la experiencia está lista
+            emitUIEvent({
+              event: 'ExperienceReady',
+              data: { status: 'ready' }
+            });
             break;
 
           case 'customEvent':
@@ -101,15 +115,33 @@ const VideoToIframe = () => {
 
   useEffect(() => {
     connectWebSocket();
- 
+
+    // Configurar un intervalo para enviar el evento TestEvent cada 30 segundos
+    const testInterval = setInterval(() => {
+      emitUIEvent({
+        event: 'TestEvent',
+        data: { message: 'Periodic test from frontend!', timestamp: new Date().toISOString() }
+      });
+    }, 30000);
+
     // Limpiar al desmontar
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
+      clearInterval(testInterval);
       socketRef.current?.close();
     };
   }, []);
+
+  const startExperience = () => {
+    setShowIframe(true);
+    // Emitir evento cuando el usuario inicia la experiencia
+    emitUIEvent({
+      event: 'ExperienceStarted',
+      data: { timestamp: new Date().toISOString() }
+    });
+  };
 
   return (
     <div className="relative w-full h-screen">
