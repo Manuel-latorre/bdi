@@ -19,7 +19,7 @@ const VideoToIframe = () => {
   const connectWebSocket = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
-    const wsUrl = `wss://live.arcanemirage.com/p/5067?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==&token=yRW52L4FiXbs`;
+    const wsUrl = `wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==&token=yRW52L4FiXbs`;
     
 
     const ws = new WebSocket(wsUrl);
@@ -29,7 +29,7 @@ const VideoToIframe = () => {
       console.log("Conectado al WebSocket de Arcane");
       ws.send(JSON.stringify({
         type: 'auth',
-        projectId: 5067,
+        projectId: "e782cf6b-32a3-4b2b-a2be-468ec62e4c34",
         key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==",
         token: "yRW52L4FiXbs"
 
