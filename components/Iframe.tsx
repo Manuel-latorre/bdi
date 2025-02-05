@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Arrow from "./Arrow";
 
-const ARCANE_WS_URL = "wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34";
+const ARCANE_WS_URL = "wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==";
 
 const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -19,15 +19,19 @@ const VideoToIframe = () => {
   const connectWebSocket = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
-    socketRef.current = new WebSocket(ARCANE_WS_URL);
+    const ws = new WebSocket(ARCANE_WS_URL);
+    socketRef.current = ws;
 
-    socketRef.current.onopen = () => {
+    ws.onopen = () => {
       console.log("Conectado al WebSocket de Arcane");
-      // Enviar mensaje de inicio de sesión si es necesario
-      socketRef.current?.send(JSON.stringify({ type: 'init' }));
+      // Enviar mensaje de autenticación inicial
+      ws.send(JSON.stringify({
+        type: 'init',
+        key: 'aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=='
+      }));
     };
 
-    socketRef.current.onmessage = (event) => {
+    ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log("Mensaje recibido:", data);
@@ -41,11 +45,11 @@ const VideoToIframe = () => {
       }
     };
 
-    socketRef.current.onerror = (error) => {
+    ws.onerror = (error) => {
       console.error("Error en WebSocket:", error);
     };
 
-    socketRef.current.onclose = (event) => {
+    ws.onclose = (event) => {
       console.log("Desconectado del WebSocket de Arcane", event.code, event.reason);
       // Intentar reconectar después de 5 segundos
       reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
