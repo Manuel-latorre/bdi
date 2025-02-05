@@ -5,7 +5,7 @@ import Arrow from "./Arrow";
 
 declare global {
   interface Window {
-    ArcanePlayer: {
+    ArcanePlayer?: {
       onPlayerEvent: (event: string, callback: () => void) => void;
     };
   }
@@ -13,17 +13,18 @@ declare global {
 
 const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [showIframe, setShowIframe] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const startExperience = () => {
     setShowIframe(true);
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined" && window.ArcanePlayer) {
+    if (window.ArcanePlayer) {
       window.ArcanePlayer.onPlayerEvent("afkWarning", () => {
-        window.location.reload(); // Refresca la pantalla al detectar inactividad
+        console.log("AFK Warning detected, closing iframe...");
+        setShowIframe(false); // Oculta el iframe y muestra el video
       });
     }
   }, []);
@@ -37,16 +38,10 @@ const VideoToIframe = () => {
           onMouseLeave={() => setShowOverlay(false)}
           onTouchStart={() => setShowOverlay(true)}
         >
-          <video
-            className="w-full h-full object-cover"
-            loop
-            muted
-            playsInline
-            autoPlay
-          >
+          <video className="w-full h-full object-cover" loop muted playsInline autoPlay>
             <source src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4" type="video/mp4" />
           </video>
-          
+
           <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${showOverlay ? "opacity-50" : "opacity-0"}`} />
           
           <button
