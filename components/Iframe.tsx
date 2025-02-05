@@ -146,11 +146,13 @@ const VideoToIframe = () => {
           width="100%"
           height="100%"
           className="w-full h-full"
-          allow="fullscreen; microphone"
+          allow="fullscreen; microphone; camera; display-capture; web-share; cross-origin-isolated; clipboard-write"
           allowFullScreen
           data-enable-events-passthrough="true"
           data-enable-touch-input="true"
           data-enable-fake-mouse-with-touch="true"
+          data-preferred-codec="VP8,VP9,AV1"
+          data-webrtc-settings='{"forceH264": false, "preferH264": false}'
         />
       )}
     </div>
