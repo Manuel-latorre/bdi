@@ -24,6 +24,10 @@ const VideoToIframe = () => {
 
   const startExperience = () => {
     setShowIframe(true);
+    emitUIEvent({
+      event: 'TestEvent',
+      data: { message: 'Hello from frontend!' }
+    });
   };
 
   const connectWebSocket = () => {
@@ -97,15 +101,7 @@ const VideoToIframe = () => {
 
   useEffect(() => {
     connectWebSocket();
-
-    // Ejemplo de cómo enviar un evento UI a UE
-    const testUIEvent = () => {
-      emitUIEvent({
-        event: 'TestEvent',
-        data: { message: 'Hello from frontend!' }
-      });
-    };
-
+ 
     // Limpiar al desmontar
     return () => {
       if (reconnectTimeoutRef.current) {
