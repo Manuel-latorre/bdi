@@ -67,6 +67,8 @@ const VideoToIframe = () => {
 
         case 'afkWarning':
           console.log('AFK Warning');
+          setShowIframe(false);
+          window.location.reload();
           break;
 
         case 'afkTimedOut':
