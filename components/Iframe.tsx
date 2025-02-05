@@ -12,7 +12,7 @@ declare global {
 }
 
 const VideoToIframe = () => {
-  const [showVideo, setShowVideo] = useState(true);
+  /* const [showVideo, setShowVideo] = useState(true); */
   const [showOverlay, setShowOverlay] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [showIframe, setShowIframe] = useState(false);
