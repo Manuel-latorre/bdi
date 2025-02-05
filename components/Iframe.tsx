@@ -9,54 +9,29 @@ const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showIframe, setShowIframe] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
-  const socketRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
-  // Función para manejar eventos UI desde el frontend hacia UE
+  // Función para emitir eventos UI usando postMessage
   const emitUIEvent = (descriptor: string | { event: string; data: any }) => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) {
+    if (iframeRef.current) {
       console.log("Emitiendo evento UI:", descriptor);
-      socketRef.current.send(JSON.stringify({
+      iframeRef.current.contentWindow?.postMessage({
         type: 'uiEvent',
         payload: descriptor
-      }));
+      }, '*');
     }
   };
 
-  const connectWebSocket = () => {
-    if (socketRef.current?.readyState === WebSocket.OPEN) return;
-
-    const wsUrl = `wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`;
-    const ws = new WebSocket(wsUrl);
-    socketRef.current = ws;
-
-    ws.onopen = () => {
-      console.log("Conectado al WebSocket de Arcane");
-      // Enviar mensaje de autenticación inicial
-      ws.send(JSON.stringify({
-        type: 'auth',
-        projectId: "e782cf6b-32a3-4b2b-a2be-468ec62e4c34",
-        key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
-      }));
-
-      // Enviar evento de prueba inmediatamente después de conectar
-      emitUIEvent({
-        event: 'TestEvent',
-        data: { message: 'Hello from frontend!' }
-      });
-    };
-
-    ws.onmessage = (event) => {
+  useEffect(() => {
+    // Escuchar mensajes del iframe
+    const handleMessage = (event: MessageEvent) => {
       try {
-        const data = JSON.parse(event.data);
+        const data = event.data;
         console.log("Mensaje recibido:", data);
 
-        // Manejar diferentes tipos de eventos
         switch (data.type) {
           case 'afkWarning':
             console.log("AFK Warning detectado");
             setShowIframe(false);
-            // Emitir evento cuando se detecta AFK
             emitUIEvent({
               event: 'AFKDetected',
               data: { status: 'warning' }
@@ -71,7 +46,6 @@ const VideoToIframe = () => {
           case 'afkTimedOut':
             console.log("Sesión terminada por inactividad");
             setShowIframe(false);
-            // Emitir evento cuando se termina la sesión por AFK
             emitUIEvent({
               event: 'AFKDetected',
               data: { status: 'timedOut' }
@@ -85,15 +59,14 @@ const VideoToIframe = () => {
           case 'ready':
             console.log("Experiencia lista");
             setShowIframe(true);
-            // Emitir evento cuando la experiencia está lista
+            // Enviar evento de prueba cuando la experiencia está lista
             emitUIEvent({
-              event: 'ExperienceReady',
-              data: { status: 'ready' }
+              event: 'TestEvent',
+              data: { message: 'Hello from frontend!' }
             });
             break;
 
           case 'customEvent':
-            // Manejar eventos personalizados desde UE
             console.log("Evento personalizado recibido:", data.payload);
             break;
         }
@@ -102,19 +75,7 @@ const VideoToIframe = () => {
       }
     };
 
-    ws.onerror = (error) => {
-      console.error("Error en WebSocket:", error);
-    };
-
-    ws.onclose = (event) => {
-      console.log(`Desconectado del WebSocket de Arcane ${event.code} ${event.reason}`);
-      // Intentar reconectar después de 5 segundos
-      reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
-    };
-  };
-
-  useEffect(() => {
-    connectWebSocket();
+    window.addEventListener('message', handleMessage);
 
     // Configurar un intervalo para enviar el evento TestEvent cada 30 segundos
     const testInterval = setInterval(() => {
@@ -124,19 +85,14 @@ const VideoToIframe = () => {
       });
     }, 30000);
 
-    // Limpiar al desmontar
     return () => {
-      if (reconnectTimeoutRef.current) {
-        clearTimeout(reconnectTimeoutRef.current);
-      }
+      window.removeEventListener('message', handleMessage);
       clearInterval(testInterval);
-      socketRef.current?.close();
     };
   }, []);
 
   const startExperience = () => {
     setShowIframe(true);
-    // Emitir evento cuando el usuario inicia la experiencia
     emitUIEvent({
       event: 'ExperienceStarted',
       data: { timestamp: new Date().toISOString() }
