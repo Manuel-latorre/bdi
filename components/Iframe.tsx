@@ -153,6 +153,22 @@ const VideoToIframe = () => {
           data-enable-fake-mouse-with-touch="true"
           data-preferred-codec="VP8,VP9,AV1"
           data-webrtc-settings='{"forceH264": false, "preferH264": false}'
+          data-enable-keyboard="true"
+          data-keyboard-layout="default"
+          data-disable-virtual-keyboard="false"
+          tabIndex={0}
+          style={{
+            outline: 'none',
+            border: 'none',
+            touchAction: 'none',
+            WebkitUserSelect: 'none',
+            userSelect: 'none',
+            WebkitTouchCallout: 'none'
+          }}
+          onLoad={() => {
+            // Asegurarse de que el iframe tenga el foco cuando se carga
+            iframeRef.current?.focus();
+          }}
         />
       )}
     </div>
