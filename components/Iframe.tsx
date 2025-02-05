@@ -12,6 +12,16 @@ const VideoToIframe = () => {
   const socketRef = useRef<WebSocket | null>(null);
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
+  // Función para manejar eventos UI desde el frontend hacia UE
+  const emitUIEvent = (descriptor: string | { event: string; data: any }) => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify({
+        type: 'uiEvent',
+        payload: descriptor
+      }));
+    }
+  };
+
   const startExperience = () => {
     setShowIframe(true);
   };
@@ -19,20 +29,17 @@ const VideoToIframe = () => {
   const connectWebSocket = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
-    const wsUrl = `wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==&token=yRW52L4FiXbs`;
-    
-
+    const wsUrl = `wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`;
     const ws = new WebSocket(wsUrl);
     socketRef.current = ws;
 
     ws.onopen = () => {
       console.log("Conectado al WebSocket de Arcane");
+      // Enviar mensaje de autenticación inicial
       ws.send(JSON.stringify({
         type: 'auth',
         projectId: "e782cf6b-32a3-4b2b-a2be-468ec62e4c34",
-        key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==",
-        token: "yRW52L4FiXbs"
-
+        key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=="
       }));
     };
 
@@ -41,9 +48,36 @@ const VideoToIframe = () => {
         const data = JSON.parse(event.data);
         console.log("Mensaje recibido:", data);
 
-        if (data.event === "afkWarning" || data.type === "afkWarning") {
-          console.log("AFK Warning detectado, cerrando iframe...");
-          setShowIframe(false);
+        // Manejar diferentes tipos de eventos
+        switch (data.type) {
+          case 'afkWarning':
+            console.log("AFK Warning detectado");
+            setShowIframe(false);
+            break;
+
+          case 'afkWarningDeactivate':
+            console.log("AFK Warning desactivado");
+            setShowIframe(true);
+            break;
+
+          case 'afkTimedOut':
+            console.log("Sesión terminada por inactividad");
+            setShowIframe(false);
+            break;
+
+          case 'loading':
+            console.log("Cargando experiencia...");
+            break;
+
+          case 'ready':
+            console.log("Experiencia lista");
+            setShowIframe(true);
+            break;
+
+          case 'customEvent':
+            // Manejar eventos personalizados desde UE
+            console.log("Evento personalizado recibido:", data.payload);
+            break;
         }
       } catch (error) {
         console.error("Error al procesar mensaje:", error);
@@ -64,6 +98,15 @@ const VideoToIframe = () => {
   useEffect(() => {
     connectWebSocket();
 
+    // Ejemplo de cómo enviar un evento UI a UE
+    const testUIEvent = () => {
+      emitUIEvent({
+        event: 'TestEvent',
+        data: { message: 'Hello from frontend!' }
+      });
+    };
+
+    // Limpiar al desmontar
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
