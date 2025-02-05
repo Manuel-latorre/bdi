@@ -113,6 +113,7 @@ const VideoToIframe = () => {
             id="arcane-player"
             data-project-id="5067"
             data-project-key="e782cf6b-32a3-4b2b-a2be-468ec62e4c34"
+            data-token="yRW52L4FiXbs"
             data-idle-timeout="200"
             data-capture-mouse="false"
             data-enable-events-passthrough="true"
