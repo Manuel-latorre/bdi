@@ -19,15 +19,20 @@ const VideoToIframe = () => {
   const connectWebSocket = () => {
     if (socketRef.current?.readyState === WebSocket.OPEN) return;
 
-    const ws = new WebSocket(ARCANE_WS_URL);
+    const wsUrl = `wss://live.arcanemirage.com/p/5067?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==&token=yRW52L4FiXbs`;
+    
+
+    const ws = new WebSocket(wsUrl);
     socketRef.current = ws;
 
     ws.onopen = () => {
       console.log("Conectado al WebSocket de Arcane");
-      // Enviar mensaje de autenticación inicial
       ws.send(JSON.stringify({
-        type: 'init',
-        key: 'aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw=='
+        type: 'auth',
+        projectId: 5067,
+        key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==",
+        token: "yRW52L4FiXbs"
+
       }));
     };
 
@@ -50,7 +55,7 @@ const VideoToIframe = () => {
     };
 
     ws.onclose = (event) => {
-      console.log("Desconectado del WebSocket de Arcane", event.code, event.reason);
+      console.log(`Desconectado del WebSocket de Arcane ${event.code} ${event.reason}`);
       // Intentar reconectar después de 5 segundos
       reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
     };
