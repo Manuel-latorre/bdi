@@ -9,6 +9,7 @@ const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showIframe, setShowIframe] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const lastActivityRef = useRef<number>(Date.now());
 
   // Función para emitir eventos UI usando postMessage
   const emitUIEvent = (descriptor: string | { event: string; data: any }) => {
@@ -17,14 +18,24 @@ const VideoToIframe = () => {
       iframeRef.current.contentWindow?.postMessage({
         type: 'uiEvent',
         payload: descriptor
-      }, 'https://embed.arcanemirage.com'); // Especificamos el origen exacto
+      }, 'https://embed.arcanemirage.com');
     }
   };
 
+  // Función para actualizar la última actividad
+  const updateLastActivity = () => {
+    lastActivityRef.current = Date.now();
+    emitUIEvent({
+      event: 'UserActivity',
+      data: { timestamp: new Date().toISOString() }
+    });
+  };
+
   useEffect(() => {
+    if (!showIframe) return;
+
     // Escuchar mensajes del iframe
     const handleMessage = (event: MessageEvent) => {
-      // Verificar que el mensaje viene de Arcane
       if (event.origin !== 'https://embed.arcanemirage.com') return;
       
       try {
@@ -35,35 +46,16 @@ const VideoToIframe = () => {
 
         switch (data.type) {
           case 'afkWarning':
-            console.log("AFK Warning detectado");
-            setShowIframe(false);
-            window.location.reload();
-            emitUIEvent({
-              event: 'AFKDetected',
-              data: { status: 'warning' }
-            });
-            break;
-
           case 'disconnected':
           case 'afkTimedOut':
             console.log("Sesión terminada por inactividad");
             setShowIframe(false);
-            window.location.reload(); // Recargar la página en caso de desconexión
+            window.location.reload();
             break;
 
           case 'ready':
             console.log("Experiencia lista");
-            setShowIframe(true);
-            // Enviar evento de prueba cuando la experiencia está lista
-            emitUIEvent({
-              event: 'TestEvent',
-              data: { message: 'Experience is ready!' }
-            });
-            break;
-
-          case 'error':
-            console.error("Error en Arcane:", data.payload);
-            setShowIframe(false);
+            updateLastActivity();
             break;
         }
       } catch (error) {
@@ -71,30 +63,51 @@ const VideoToIframe = () => {
       }
     };
 
+    // Eventos de actividad del usuario
+    const activityEvents = [
+      'mousemove', 'mousedown', 'keydown', 
+      'touchstart', 'touchmove', 'wheel'
+    ];
+
+    const handleUserActivity = () => {
+      updateLastActivity();
+    };
+
+    // Agregar listeners para todos los eventos de actividad
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleUserActivity, { passive: true });
+    });
+
     window.addEventListener('message', handleMessage);
 
-    // Configurar un intervalo para mantener la sesión activa
-    const keepAliveInterval = setInterval(() => {
-      if (showIframe) {
+    // Intervalo para verificar inactividad y enviar keepalive
+    const activityInterval = setInterval(() => {
+      const inactiveTime = Date.now() - lastActivityRef.current;
+      
+      // Si han pasado más de 10 segundos desde la última actividad
+      if (inactiveTime > 10000) {
         emitUIEvent({
           event: 'KeepAlive',
-          data: { timestamp: new Date().toISOString() }
+          data: { 
+            timestamp: new Date().toISOString(),
+            inactiveTime
+          }
         });
       }
-    }, 15000); // Cada 15 segundos
+    }, 5000);
 
     return () => {
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleUserActivity);
+      });
       window.removeEventListener('message', handleMessage);
-      clearInterval(keepAliveInterval);
+      clearInterval(activityInterval);
     };
-  }, [showIframe]); // Agregamos showIframe como dependencia
+  }, [showIframe]);
 
   const startExperience = () => {
     setShowIframe(true);
-    emitUIEvent({
-      event: 'ExperienceStarted',
-      data: { timestamp: new Date().toISOString() }
-    });
+    updateLastActivity();
   };
 
   return (
