@@ -3,115 +3,90 @@
 import React, { useState, useEffect, useRef } from "react";
 import Arrow from "./Arrow";
 
-interface ArcanePlayer {
-  play: () => void;
-  emitUIEvent: (descriptor: string | object) => boolean;
-  onReceiveEvent: (name: string, listener: (response: string) => void) => void;
-  onPlayerEvent: (name: string, listener: (data?: any) => void) => void;
-  toggleFullscreen: () => boolean;
-  getPlayerState: () => 'loading' | 'ready' | 'idle' | 'disconnected' | 'exit';
-}
-
-declare global {
-  interface Window {
-    ArcanePlayer: ArcanePlayer;
-    initArcanePlayer: () => void;
-  }
-}
-
-//const ARCANE_WS_URL = "wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==";
+const IFRAME_DOMAIN = 'https://embed.arcanemirage.com';
 
 const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showIframe, setShowIframe] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<ArcanePlayer | null>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    if (!showIframe || !containerRef.current) return;
+    if (!showIframe) return;
 
-    const script = document.createElement('script');
-    script.src = 'https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34/e';
-    
-    script.onload = () => {
-      window.initArcanePlayer();
-    };
-
-    const handleArcanePlayerLoaded = () => {
-      const player = window.ArcanePlayer;
-      playerRef.current = player;
-
-      // Eventos del player
-      player.onPlayerEvent('loading', () => {
-        console.log('Estado: Cargando experiencia');
-      });
-
-      player.onPlayerEvent('ready', () => {
-        console.log('Estado: Experiencia lista');
-        player.play();
-        
-        // Ejemplo de envío de evento a UE cuando está listo
-        player.emitUIEvent({
-          event: 'PlayerReady',
-          data: { timestamp: new Date().toISOString() }
-        });
-      });
-
-      player.onPlayerEvent('idle', () => {
-        console.log('Estado: Idle');
-      });
-
-      player.onPlayerEvent('disconnected', () => {
-        console.log('Estado: Desconectado');
-        handleDisconnection();
-      });
-
-      player.onPlayerEvent('exit', () => {
-        console.log('Estado: Salida');
-        setShowIframe(false);
-      });
-
-      player.onPlayerEvent('afkWarning', () => {
-        console.log('Advertencia: Inactividad detectada');
-        player.emitUIEvent('AfkWarningReceived');
-      });
-
-      player.onPlayerEvent('afkWarningDeactivate', () => {
-        console.log('Advertencia de inactividad desactivada');
-      });
-
-      player.onPlayerEvent('afkTimedOut', () => {
-        console.log('Timeout por inactividad');
-        handleDisconnection();
-      });
-
-      // Manejo de archivos
-      player.onPlayerEvent('fileProgress', (progress: number) => {
-        console.log('Progreso de descarga:', progress);
-      });
-
-      player.onPlayerEvent('fileReceived', (data: { file: Blob, extension: string }) => {
-        handleFileDownload(data);
-      });
-
-      // Escuchar eventos desde UE
-      player.onReceiveEvent('event.CustomEvent', (response) => {
+    const eventListeners: Record<string, (response: any) => void> = {
+      'MySimpleEvent': (response) => {
+        console.log('Simple event response:', response);
+      },
+      'event.MyCustomEventWithData': (response) => {
         try {
           const data = JSON.parse(response);
-          console.log('Evento recibido desde UE:', data);
+          console.log('Custom event data:', data);
         } catch (error) {
-          console.error('Error al procesar evento de UE:', error);
+          console.error('Error parsing response:', error);
         }
-      });
+      }
     };
 
-    const handleDisconnection = () => {
-      if (playerRef.current) {
-        const currentState = playerRef.current.getPlayerState();
-        console.log('Estado al desconectar:', currentState);
+    const handleMessage = (e: MessageEvent) => {
+      if (e.origin !== IFRAME_DOMAIN) return;
+
+      const { name, event, data, descriptor, response } = e.data;
+      console.log('Message received:', e.data);
+
+      switch (name) {
+        case 'ArcanePlayerLoaded':
+          setupEvents();
+          break;
+
+        case 'onPlayerEvent':
+          handlePlayerEvent(event, data);
+          break;
+
+        case 'onReceiveEvent':
+          if (eventListeners[descriptor]) {
+            eventListeners[descriptor](response);
+          }
+          break;
       }
-      setShowIframe(false);
-      window.location.reload();
+    };
+
+    const handlePlayerEvent = (event: string, data: any) => {
+      switch (event) {
+        case 'ready':
+          console.log('Experience ready');
+          play();
+          break;
+
+        case 'fileReceived':
+          handleFileDownload(data);
+          break;
+
+        case 'fileProgress':
+          console.log('File progress:', data);
+          break;
+
+        case 'afkWarning':
+          console.log('AFK Warning');
+          break;
+
+        case 'afkTimedOut':
+          console.log('AFK Timeout - reloading...');
+          setShowIframe(false);
+          window.location.reload();
+          break;
+
+        case 'disconnected':
+          console.log('Disconnected - reloading...');
+          setShowIframe(false);
+          window.location.reload();
+          break;
+      }
+    };
+
+    const setupEvents = () => {
+      Object.keys(eventListeners).forEach((descriptor) => {
+        postMessageToIframe('onReceiveEvent', { descriptor });
+      });
     };
 
     const handleFileDownload = (data: { file: Blob, extension: string }) => {
@@ -125,16 +100,33 @@ const VideoToIframe = () => {
       a.remove();
     };
 
-    window.addEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
-
-    containerRef.current.appendChild(script);
+    window.addEventListener('message', handleMessage);
 
     return () => {
-      window.removeEventListener('ArcanePlayerLoaded', handleArcanePlayerLoaded);
-      script.remove();
-      playerRef.current = null;
+      window.removeEventListener('message', handleMessage);
     };
   }, [showIframe]);
+
+  const postMessageToIframe = (cmd: string, params = {}) => {
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(
+        { cmd, ...params },
+        IFRAME_DOMAIN
+      );
+    }
+  };
+
+  const play = () => {
+    postMessageToIframe('play');
+  };
+
+  const toggleFullscreen = () => {
+    postMessageToIframe('toggleFullscreen');
+  };
+
+  const emitUIEvent = (descriptor: string | object) => {
+    postMessageToIframe('emitUIEvent', { descriptor });
+  };
 
   const startExperience = () => {
     setShowIframe(true);
@@ -167,31 +159,18 @@ const VideoToIframe = () => {
           </button>
         </div>
       ) : (
-        <div 
-          ref={containerRef}
+        <iframe
+          ref={iframeRef}
+          id="arcane-player-frame"
+          src={`${IFRAME_DOMAIN}/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?origin=${encodeURIComponent(window.location.origin)}&key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`}
+          frameBorder="0"
+          width="100%"
+          height="100%"
           className="w-full h-full"
-        >
-          <div
-            id="arcane-player"
-            data-project-id="5067"
-            data-project-key="e782cf6b-32a3-4b2b-a2be-468ec62e4c34"
-            data-idle-timeout="900"
-            data-capture-mouse="false"
-            data-enable-events-passthrough="true"
-            data-hide-ui-controls="true"
-            data-autoplay="false"
-            data-enable-touch-input="true"
-            data-enable-fake-mouse-with-touch="true"
-            data-touch-mouse-threshold="10"
-            className="w-full h-full"
-            style={{
-              touchAction: 'none',
-              WebkitUserSelect: 'none',
-              userSelect: 'none',
-              WebkitTouchCallout: 'none'
-            }}
-          />
-        </div>
+          allow="fullscreen; microphone; camera; display-capture; web-share; cross-origin-isolated; clipboard-write"
+          allowFullScreen
+          onLoad={() => postMessageToIframe('init')}
+        />
       )}
     </div>
   );
