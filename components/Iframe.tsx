@@ -3,30 +3,48 @@
 import React, { useState, useEffect, useRef } from "react";
 import Arrow from "./Arrow";
 
-declare global {
-  interface Window {
-    ArcanePlayer?: {
-      onPlayerEvent: (event: string, callback: () => void) => void;
-    };
-  }
-}
+const ARCANE_WS_URL = "wss://live.arcanemirage.com/p/e782cf6b-32a3-4b2b-a2be-468ec62e4c34";
 
 const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
   const [showIframe, setShowIframe] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  const socketRef = useRef<WebSocket | null>(null);
 
   const startExperience = () => {
     setShowIframe(true);
   };
 
   useEffect(() => {
-    if (window.ArcanePlayer) {
-      window.ArcanePlayer.onPlayerEvent("afkWarning", () => {
-        console.log("AFK Warning detected, closing iframe...");
-        setShowIframe(false); // Oculta el iframe y muestra el video
-      });
-    }
+    // Conectar al WebSocket de Arcane
+    socketRef.current = new WebSocket(ARCANE_WS_URL);
+
+    socketRef.current.onopen = () => {
+      console.log("Conectado al WebSocket de Arcane");
+    };
+
+    socketRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("Mensaje recibido:", data);
+
+      // Si el evento recibido es `afkWarning`, cerrar el iframe y mostrar el video
+      if (data.event === "afkWarning") {
+        console.log("AFK Warning detectado, cerrando iframe...");
+        setShowIframe(false);
+      }
+    };
+
+    socketRef.current.onerror = (error) => {
+      console.error("Error en WebSocket:", error);
+    };
+
+    socketRef.current.onclose = () => {
+      console.log("Desconectado del WebSocket de Arcane");
+    };
+
+    return () => {
+      socketRef.current?.close();
+    };
   }, []);
 
   return (
