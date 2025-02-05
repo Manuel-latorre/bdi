@@ -118,7 +118,16 @@ const VideoToIframe = () => {
             data-enable-events-passthrough="true"
             data-hide-ui-controls="true"
             data-autoplay="false"
+            data-enable-touch-input="true"
+            data-enable-fake-mouse-with-touch="true"
+            data-touch-mouse-threshold="10"
             className="w-full h-full"
+            style={{
+              touchAction: 'none',
+              WebkitUserSelect: 'none',
+              userSelect: 'none',
+              WebkitTouchCallout: 'none'
+            }}
           />
         </div>
       )}
