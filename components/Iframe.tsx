@@ -10,27 +10,34 @@ const VideoToIframe = () => {
   const [showIframe, setShowIframe] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
 
   const startExperience = () => {
     setShowIframe(true);
   };
 
-  useEffect(() => {
-    // Conectar al WebSocket de Arcane
+  const connectWebSocket = () => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+
     socketRef.current = new WebSocket(ARCANE_WS_URL);
 
     socketRef.current.onopen = () => {
       console.log("Conectado al WebSocket de Arcane");
+      // Enviar mensaje de inicio de sesión si es necesario
+      socketRef.current?.send(JSON.stringify({ type: 'init' }));
     };
 
     socketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("Mensaje recibido:", data);
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Mensaje recibido:", data);
 
-      // Si el evento recibido es `afkWarning`, cerrar el iframe y mostrar el video
-      if (data.event === "afkWarning") {
-        console.log("AFK Warning detectado, cerrando iframe...");
-        setShowIframe(false);
+        if (data.event === "afkWarning" || data.type === "afkWarning") {
+          console.log("AFK Warning detectado, cerrando iframe...");
+          setShowIframe(false);
+        }
+      } catch (error) {
+        console.error("Error al procesar mensaje:", error);
       }
     };
 
@@ -38,11 +45,20 @@ const VideoToIframe = () => {
       console.error("Error en WebSocket:", error);
     };
 
-    socketRef.current.onclose = () => {
-      console.log("Desconectado del WebSocket de Arcane");
+    socketRef.current.onclose = (event) => {
+      console.log("Desconectado del WebSocket de Arcane", event.code, event.reason);
+      // Intentar reconectar después de 5 segundos
+      reconnectTimeoutRef.current = setTimeout(connectWebSocket, 5000);
     };
+  };
+
+  useEffect(() => {
+    connectWebSocket();
 
     return () => {
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
       socketRef.current?.close();
     };
   }, []);
