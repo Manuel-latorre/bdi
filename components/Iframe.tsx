@@ -120,13 +120,13 @@ const VideoToIframe = () => {
     postMessageToIframe('play');
   };
 
-  const toggleFullscreen = () => {
+  /* const toggleFullscreen = () => {
     postMessageToIframe('toggleFullscreen');
   };
 
   const emitUIEvent = (descriptor: string | object) => {
     postMessageToIframe('emitUIEvent', { descriptor });
-  };
+  }; */
 
   const startExperience = () => {
     setShowIframe(true);
