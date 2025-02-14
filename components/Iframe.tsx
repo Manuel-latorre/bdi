@@ -1,6 +1,7 @@
 "use client";
+
+
 import React, { useState, useEffect, useRef } from "react";
-import Arrow from "./Arrow";
 
 const IFRAME_DOMAIN = "https://embed.arcanemirage.com";
 
