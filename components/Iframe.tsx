@@ -142,9 +142,16 @@ const VideoToIframe = () => {
           onMouseEnter={() => setShowOverlay(true)}
           onMouseLeave={() => setShowOverlay(false)}
         >
-          <video className="w-full h-full object-cover" loop muted playsInline autoPlay>
-            <source src="https://res.cloudinary.com/drsrva2kp/video/upload/v1737997149/CasaLoft2024_1_1_gegyh5.mp4" type="video/mp4" />
-          </video>
+          <div className="relative w-full aspect-video">
+  <iframe
+    ref={iframeRef}
+    src="https://player.vimeo.com/video/1056627685?h=ab2b52b1a6&autoplay=1&loop=1&muted=1&background=1&controls=0"
+    frameBorder="0"
+    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+    className="absolute top-0 left-0 w-full h-full"
+    title="Video_Narvaez_BDI_01"
+  />
+</div>
 
           <div className={`absolute inset-0 bg-black transition-opacity duration-300 ${showOverlay ? "opacity-50" : "opacity-0"}`} />
           
