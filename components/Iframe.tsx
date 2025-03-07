@@ -164,9 +164,9 @@ const VideoToIframe = () => {
         <iframe
           ref={iframeRef}
           id="arcane-player-frame"
-          src={`${IFRAME_DOMAIN}/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?origin=${encodeURIComponent(
+          src={`${IFRAME_DOMAIN}/82b5ceba-f450-4d7f-877a-bb9150dc201a?origin=${encodeURIComponent(
             window.location.origin
-          )}&key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`}
+          )}&key=aWQ9NDc2MiZrZXk9ODJiNWNlYmEtZjQ1MC00ZDdmLTg3N2EtYmI5MTUwZGMyMDFhJnRva2VuPU55WHpqS190YmhicQ==`}
           frameBorder="0"
           width="100%"
           height="100%"
