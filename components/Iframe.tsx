@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
-//const IFRAME_DOMAIN = "https://embed.arcanemirage.com";
+const IFRAME_DOMAIN = "https://embed.arcanemirage.com";
 
 const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -28,7 +28,7 @@ const VideoToIframe = () => {
     };
 
     const handleMessage = (e: MessageEvent) => {
-      if (e.origin !== "https://embed.arcanemirage.com") return;
+      if (e.origin !== IFRAME_DOMAIN) return;
 
       const { name, event, data, descriptor, response } = e.data;
       console.log("Message received:", e.data);
@@ -113,7 +113,7 @@ const VideoToIframe = () => {
     if (iframeRef.current?.contentWindow) {
       iframeRef.current.contentWindow.postMessage(
         { cmd, ...params },
-        "https://embed.arcanemirage.com"
+        IFRAME_DOMAIN
       );
     }
   };
@@ -164,7 +164,7 @@ const VideoToIframe = () => {
         <iframe
           ref={iframeRef}
           id="arcane-player-frame"
-          src={`https://embed.arcanemirage.com/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?origin=${encodeURIComponent(
+          src={`${IFRAME_DOMAIN}/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?origin=${encodeURIComponent(
             window.location.origin
           )}&key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`}
           frameBorder="0"
