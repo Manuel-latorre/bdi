@@ -1,6 +1,4 @@
 "use client";
-
-
 import React, { useState, useEffect, useRef } from "react";
 
 const IFRAME_DOMAIN = "https://embed.arcanemirage.com";
@@ -138,12 +136,24 @@ const VideoToIframe = () => {
     <div className="relative w-full h-screen">
       {!showIframe ? (
         <div
-        className="relative w-full h-full cursor-pointer"
-        onMouseEnter={() => setShowOverlay(true)}
-        onMouseLeave={() => setShowOverlay(false)}
-        onClick={startExperience}
-      >
-        <div className="relative w-full aspect-video">
+          className="relative w-full h-full cursor-pointer"
+          onMouseEnter={() => setShowOverlay(true)}
+          onMouseLeave={() => setShowOverlay(false)}
+          onClick={startExperience}
+        >
+          <div className="relative w-full aspect-video">
+            <video
+              className="absolute top-0 left-0 w-full h-full object-cover"
+              autoPlay
+              loop
+              muted
+              playsInline
+            >
+              <source src="Narvaez_Logo.mp4" type="video/mp4" />
+              Tu navegador no soporta el video HTML5.
+            </video>
+          </div>
+          {/* <div className="relative w-full aspect-video">
           <iframe
             ref={iframeRef}
             src="https://player.vimeo.com/video/1056627685?h=ab2b52b1a6&autoplay=1&loop=1&muted=1&background=1&controls=0"
@@ -152,21 +162,24 @@ const VideoToIframe = () => {
             className="absolute top-0 left-0 w-full h-full"
             title="Video_Narvaez_BDI_01"
           />
-        </div>
+        </div> */}
 
-        <div
-          className={`absolute inset-0 bg-black transition-opacity duration-300 ${
-            showOverlay ? "opacity-0" : "opacity-0"
-          }`}
-        />
-      </div>
+          <div
+            className={`absolute inset-0 bg-black transition-opacity duration-300 ${
+              showOverlay ? "opacity-0" : "opacity-0"
+            }`}
+          />
+        </div>
       ) : (
         <iframe
           ref={iframeRef}
           id="arcane-player-frame"
-          src={`${IFRAME_DOMAIN}/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?origin=${encodeURIComponent(
+          /* src={`${IFRAME_DOMAIN}/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?origin=${encodeURIComponent(
             window.location.origin
-          )}&key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`}
+          )}&key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`} */
+          src={`${IFRAME_DOMAIN}/82b5ceba-f450-4d7f-877a-bb9150dc201a?origin=${encodeURIComponent(
+            window.location.origin
+          )}&key=aWQ9NDc2MiZrZXk9ODJiNWNlYmEtZjQ1MC00ZDdmLTg3N2EtYmI5MTUwZGMyMDFhJnRva2VuPU55WHpqS190YmhicQ==`}
           frameBorder="0"
           width="100%"
           height="100%"
