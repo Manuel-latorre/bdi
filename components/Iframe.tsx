@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect, useRef } from "react";
 
 const IFRAME_DOMAIN = "https://embed.arcanemirage.com";
@@ -23,6 +24,14 @@ const VideoToIframe = () => {
           console.error("Error parsing response:", error);
         }
       },
+      OpenURL: (response) => {
+        console.log("OpenURL event received:", response);
+        if (typeof response === "string") {
+          window.open(response, "_blank", "noopener,noreferrer");
+        } else {
+          console.warn("OpenURL ignorado, URL inválida:", response);
+        }
+      },
     };
 
     const handleMessage = (e: MessageEvent) => {
@@ -34,6 +43,14 @@ const VideoToIframe = () => {
       switch (name) {
         case "ArcanePlayerLoaded":
           setupEvents();
+          // Enviar configuración de responsive al iframe
+          postMessageToIframe("setResponsive", { 
+            mobile: true, 
+            viewport: { 
+              width: window.innerWidth, 
+              height: window.innerHeight 
+            } 
+          });
           break;
 
         case "onPlayerEvent":
@@ -100,10 +117,22 @@ const VideoToIframe = () => {
       a.remove();
     };
 
+    // Listener para cambios de tamaño de ventana
+    const handleResize = () => {
+      if (iframeRef.current) {
+        postMessageToIframe("updateViewport", { 
+          width: window.innerWidth, 
+          height: window.innerHeight 
+        });
+      }
+    };
+
     window.addEventListener("message", handleMessage);
+    window.addEventListener("resize", handleResize);
 
     return () => {
       window.removeEventListener("message", handleMessage);
+      window.removeEventListener("resize", handleResize);
     };
   }, [showIframe]);
 
@@ -132,37 +161,39 @@ const VideoToIframe = () => {
     setShowIframe(true);
   };
 
+  // Generar URL del iframe con parámetros responsive
+  const getIframeUrl = () => {
+    const baseUrl = `${IFRAME_DOMAIN}/82b5ceba-f450-4d7f-877a-bb9150dc201a`;
+    const params = new URLSearchParams({
+      origin: window.location.origin,
+      key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==",
+      responsive: "true",
+      mobile: window.innerWidth <= 768 ? "true" : "false",
+      viewport: `${window.innerWidth}x${window.innerHeight}`,
+      scale: "fit"
+    });
+    return `${baseUrl}?${params.toString()}`;
+  };
+
   return (
-    <div className="relative w-full h-screen">
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-black">
       {!showIframe ? (
         <div
-          className="relative w-full h-full cursor-pointer"
+          className="relative w-full h-full cursor-pointer bg-black flex items-center justify-center"
           onMouseEnter={() => setShowOverlay(true)}
           onMouseLeave={() => setShowOverlay(false)}
           onClick={startExperience}
         >
-          <div className="relative w-full aspect-video">
-            <video
-              className="absolute top-0 left-0 w-full h-full object-cover"
-              autoPlay
-              loop
-              muted
-              playsInline
-            >
-              <source src="Narvaez_Logo.mp4" type="video/mp4" />
-              Tu navegador no soporta el video HTML5.
-            </video>
-          </div>
-          {/* <div className="relative w-full aspect-video">
-          <iframe
-            ref={iframeRef}
-            src="https://player.vimeo.com/video/1056627685?h=ab2b52b1a6&autoplay=1&loop=1&muted=1&background=1&controls=0"
-            frameBorder="0"
-            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-            className="absolute top-0 left-0 w-full h-full"
-            title="Video_Narvaez_BDI_01"
-          />
-        </div> */}
+          <video
+            className="w-full h-full object-contain max-w-full max-h-full"
+            autoPlay
+            loop
+            muted
+            playsInline
+          >
+            <source src="Narvaez_Logo.mp4" type="video/mp4" />
+            Tu navegador no soporta el video HTML5.
+          </video>
 
           <div
             className={`absolute inset-0 bg-black transition-opacity duration-300 ${
@@ -171,23 +202,55 @@ const VideoToIframe = () => {
           />
         </div>
       ) : (
-        <iframe
-          ref={iframeRef}
-          id="arcane-player-frame"
-          /* src={`${IFRAME_DOMAIN}/e782cf6b-32a3-4b2b-a2be-468ec62e4c34?origin=${encodeURIComponent(
-            window.location.origin
-          )}&key=aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==`} */
-          src={`${IFRAME_DOMAIN}/82b5ceba-f450-4d7f-877a-bb9150dc201a?origin=${encodeURIComponent(
-            window.location.origin
-          )}&key=aWQ9NDc2MiZrZXk9ODJiNWNlYmEtZjQ1MC00ZDdmLTg3N2EtYmI5MTUwZGMyMDFhJnRva2VuPU55WHpqS190YmhicQ==`}
-          frameBorder="0"
-          width="100%"
-          height="100%"
-          className="w-full h-full"
-          allow="fullscreen; microphone; camera; display-capture; web-share; cross-origin-isolated; clipboard-write"
-          allowFullScreen
-          onLoad={() => postMessageToIframe("init")}
-        />
+        <div className="absolute inset-0 w-full h-full">
+          <style jsx>{`
+            #arcane-player-frame {
+              transform-origin: top left;
+              overflow: hidden;
+            }
+            
+            /* CSS que puede afectar el contenido del iframe */
+            #arcane-player-frame::after {
+              content: '';
+              position: absolute;
+              top: 0;
+              left: 0;
+              right: 0;
+              bottom: 0;
+              pointer-events: none;
+            }
+          `}</style>
+          
+          <iframe
+            ref={iframeRef}
+            id="arcane-player-frame"
+            src={getIframeUrl()}
+            frameBorder="0"
+            width="100%"
+            height="100%"
+            className="w-full h-full border-0"
+            style={{
+              minWidth: '100%',
+              minHeight: '100%',
+              objectFit: 'contain'
+            }}
+            allow="fullscreen; microphone; camera; display-capture; web-share; cross-origin-isolated; clipboard-write"
+            allowFullScreen
+            onLoad={() => {
+              postMessageToIframe("init");
+              // Configurar responsive después de cargar
+              setTimeout(() => {
+                postMessageToIframe("setResponsive", { 
+                  enabled: true,
+                  viewport: { 
+                    width: window.innerWidth, 
+                    height: window.innerHeight 
+                  }
+                });
+              }, 1000);
+            }}
+          />
+        </div>
       )}
     </div>
   );
