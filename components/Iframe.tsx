@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 
-const IFRAME_DOMAIN = "https://embed.arcanemirage.com";
+const IFRAME_DOMAIN = "https://connector.eagle3dstreaming.com";
+
 
 const VideoToIframe = () => {
   const [showOverlay, setShowOverlay] = useState(false);
@@ -163,10 +164,9 @@ const VideoToIframe = () => {
 
   // Generar URL del iframe con parámetros responsive
   const getIframeUrl = () => {
-    const baseUrl = `${IFRAME_DOMAIN}/82b5ceba-f450-4d7f-877a-bb9150dc201a`;
+    const baseUrl = `${IFRAME_DOMAIN}/v6/eyJvd25lciI6IlZhbGVyaWFDYWJlem9uIiwiYXBwTmFtZSI6IkJESSIsImNvbmZpZ05hbWUiOiJXZWJjYXN0In0=`;
     const params = new URLSearchParams({
       origin: window.location.origin,
-      key: "aWQ9NTA2NyZrZXk9ZTc4MmNmNmItMzJhMy00YjJiLWEyYmUtNDY4ZWM2MmU0YzM0JnRva2VuPXlSVzUyTDRGaVhicw==",
       responsive: "true",
       mobile: window.innerWidth <= 768 ? "true" : "false",
       viewport: `${window.innerWidth}x${window.innerHeight}`,
