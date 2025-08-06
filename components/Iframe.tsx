@@ -202,7 +202,7 @@ const VideoToIframe = () => {
           />
         </div>
       ) : (
-        <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 w-full h-full bg-black">
           <style jsx>{`
             #arcane-player-frame {
               transform-origin: top left;

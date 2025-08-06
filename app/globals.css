@@ -3,20 +3,19 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
+  --background: #000000;
   --foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #ededed;
   }
 }
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background: #000000;
   font-family: PPTelegraf,
 }
 
@@ -31,4 +30,5 @@ html, body {
   padding: 0;
   overflow: hidden; /* Evita cualquier scroll */
   height: 100%;
+  background-color: #000000;
 }
