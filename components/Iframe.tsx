@@ -164,7 +164,7 @@ const VideoToIframe = () => {
 
   // Generar URL del iframe con parámetros responsive
   const getIframeUrl = () => {
-    const baseUrl = `${IFRAME_DOMAIN}/v6/eyJvd25lciI6IlZhbGVyaWFDYWJlem9uIiwiYXBwTmFtZSI6IkJESSIsImNvbmZpZ05hbWUiOiJXZWJjYXN0In0=`;
+    const baseUrl = `${IFRAME_DOMAIN}/v5/ValeriaCabezon/BDI/WebcastFinal5min`;
     const params = new URLSearchParams({
       origin: window.location.origin,
       responsive: "true",
